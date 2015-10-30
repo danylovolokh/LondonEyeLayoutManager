@@ -274,7 +274,18 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
         mCurrentViewPosition = 0;
 
         if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, state " + state);
-        layoutInFourthQuadrant(recycler, 0/*This is Recycler view Top == 0*/);
+
+        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, mRadius " + mRadius);
+        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, mOriginY " + mOriginY);
+
+        int previoutViewBottom = 0;
+
+        for(int i=0; i< 2; i++){
+            View view = recycler.getViewForPosition(i);
+            addView(view);
+            layoutInFourthQuadrant(view, recycler, previoutViewBottom/*This is Recycler view Top == 0*/);
+            previoutViewBottom = view.getBottom();
+        }
     }
 
     private void calculateCapsuleWidthHeight(RecyclerView.Recycler recycler) {
@@ -351,14 +362,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
      *                          |
      *                          |
      */
-    private void layoutInFourthQuadrant(RecyclerView.Recycler recycler, int previousViewBottom) {
-
-        View firstView = recycler.getViewForPosition(0);
-
-        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, mRadius " + mRadius);
-        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, mOriginY " + mOriginY);
-
-        addView(firstView);
+    private void layoutInFourthQuadrant(View view, RecyclerView.Recycler recycler, int previousViewBottom) {
 
         int decoratedCapsuleWidth;
         int decoratedCapsuleHeight;
@@ -371,9 +375,9 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
             decoratedCapsuleWidth = mDecoratedCapsuleWidth;
             decoratedCapsuleHeight = mDecoratedCapsuleHeight;
         } else {
-            measureChildWithMargins(firstView, 0, 0);
-            decoratedCapsuleWidth = getDecoratedMeasuredWidth(firstView);
-            decoratedCapsuleHeight = getDecoratedMeasuredHeight(firstView);
+            measureChildWithMargins(view, 0, 0);
+            decoratedCapsuleWidth = getDecoratedMeasuredWidth(view);
+            decoratedCapsuleHeight = getDecoratedMeasuredHeight(view);
         }
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, decoratedCapsuleWidth " + decoratedCapsuleWidth);
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, decoratedCapsuleHeight " + decoratedCapsuleHeight);
@@ -452,7 +456,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, right " + right);
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, bottom " + bottom);
 
-        layoutDecorated(firstView, left, top, right, bottom);
+        layoutDecorated(view, left, top, right, bottom);
     }
 
     /**

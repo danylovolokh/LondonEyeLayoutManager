@@ -53,7 +53,7 @@ public class MainActivity extends ActionBarActivity {
                 "Passenger Cabin 10",
                 "Passenger Cabin 11"));
 
-        private RecyclerView mRecyclerView;
+        private DebugRecyclerView mRecyclerView;
 
 //        private LinearLayoutManager mLayoutManager;
         private LondonEyeLayoutManager mLondonEyeLayoutManager;
@@ -69,26 +69,23 @@ public class MainActivity extends ActionBarActivity {
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-            mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view);
+            mRecyclerView = (DebugRecyclerView) rootView.findViewById(R.id.recycler_view);
 
             // use this setting to improve performance if you know that changes
             // in content do not change the layout size of the RecyclerView
             mRecyclerView.setHasFixedSize(true);
 
             // use a linear layout manager
-//            mLayoutManager = new LinearLayoutManager(getActivity());
-            mLondonEyeLayoutManager = new LondonEyeLayoutManager(getActivity(), getActivity().getResources().getDisplayMetrics().widthPixels);
+
+            int screenWidth = getActivity().getResources().getDisplayMetrics().widthPixels;
+
+            mLondonEyeLayoutManager = new LondonEyeLayoutManager(getActivity(), screenWidth);
             mRecyclerView.setLayoutManager(mLondonEyeLayoutManager);//new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
 
             mVideoRecyclerViewAdapter = new LondonEyeListAdapter(getActivity(), mList);
 
             mRecyclerView.setAdapter(mVideoRecyclerViewAdapter);
-
-//            mRecyclerView2 = (RecyclerView)rootView.findViewById(R.id.recycler_view2);
-//            mRecyclerView2.setHasFixedSize(true);
-//
-//            mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
-//            mRecyclerView2.setAdapter(new LondonEyeListAdapter(getActivity(), mList));
+            mRecyclerView.setRadius(screenWidth/2);
 
             return rootView;
         }

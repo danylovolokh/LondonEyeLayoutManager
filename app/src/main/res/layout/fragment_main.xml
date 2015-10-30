@@ -11,7 +11,7 @@
     android:orientation="vertical"
     tools:context=".MainActivity$PlaceholderFragment">
 
-    <android.support.v7.widget.RecyclerView
+    <com.volokh.danylo.DebugRecyclerView
         android:id="@+id/recycler_view"
         android:background="@android:color/holo_orange_dark"
         android:layout_width="match_parent"
