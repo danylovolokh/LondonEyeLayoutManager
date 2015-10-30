@@ -2,12 +2,19 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="100dp"
+    android:background="@android:color/holo_green_dark"
+    android:gravity="center"
+    >
 
     <TextView
         android:id="@+id/capsule_name"
-        android:background="@android:color/holo_green_dark"
-        android:layout_width="match_parent"
-        android:layout_height="100dp" />
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:textColor="@android:color/black"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@android:color/holo_blue_bright"
+        />
 
 </LinearLayout>

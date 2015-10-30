@@ -31,13 +31,9 @@ public class LondonEyeListAdapter extends RecyclerView.Adapter<PassengerCapsuleV
 
     @Override
     public PassengerCapsuleViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        if(SHOW_LOGS) Log.v(TAG, "onCreateViewHolder, parent getHeight " + parent.getHeight());
-        if(SHOW_LOGS) Log.v(TAG, "onCreateViewHolder, parent getWidth " + parent.getWidth());
+        if(SHOW_LOGS) Log.v(TAG, "onCreateViewHolder, viewType " + viewType);
 
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.capsule_layout, parent, false);
-        if(SHOW_LOGS) Log.v(TAG, "onCreateViewHolder, view getHeight " + view.getHeight());
-        if(SHOW_LOGS) Log.v(TAG, "onCreateViewHolder, view getWidth " + view.getWidth());
-
         return new PassengerCapsuleViewHolder(view);
     }
 

@@ -1,6 +1,5 @@
 package com.volokh.danylo.layoutmanager;
 
-import android.graphics.Rect;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.OrientationHelper;
 import android.support.v7.widget.RecyclerView;
@@ -21,6 +20,21 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
     private static final boolean SHOW_LOGS = Config.SHOW_LOGS;
     private static final String TAG = LondonEyeLayoutManager.class.getSimpleName();
 
+    /**
+     * If this is set to "true" we will calculate size of capsules only once.
+     * It is some sort of optimization
+     */
+    private boolean mHasFixedSizeCapsules;
+    /**
+     * This is a helper value. We should always return "true" from {@link #canScrollVertically()}
+     * and {@link #canScrollHorizontally()} but we need to change this value to false when measuring a child view size.
+     * This is because the width "match_parent" is not calculated correctly if {@link #canScrollHorizontally()} returns "true"
+     * and
+     * the height "match_parent" is not calculated correctly if {@link #canScrollVertically()} returns "true"
+     */
+
+    private boolean mCanScrollVerticallyHorizontally = true;
+
     private static final int ANGLE_DELTA = 2;
 
     private OrientationHelper mOrientationHelper;
@@ -35,8 +49,8 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
 
     private final int mRadius;
 
-    private int mDecoratedChildWidth;
-    private int mDecoratedChildHeight;
+    private int mDecoratedCapsuleWidth;
+    private int mDecoratedCapsuleHeight;
 
     private int mFirstVisiblePosition;
 
@@ -48,6 +62,10 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
     public LondonEyeLayoutManager(FragmentActivity activity, int screenWidthPixels) {
         mRadius = screenWidthPixels / 2;
         requestLayout();
+    }
+
+    public void setHasFixedSizeCapsules(boolean hasFixedSizeCapsules){
+        mHasFixedSizeCapsules = hasFixedSizeCapsules;
     }
 
     static class LayoutState {
@@ -237,30 +255,26 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
 
     @Override
     public boolean canScrollVertically() {
-        //We do allow scrolling
-        return true; // TODO how to make this true but be able to  use HEIGHT = match_parent for capsules
+        return mCanScrollVerticallyHorizontally;
     }
 
     @Override
     public boolean canScrollHorizontally() {
-        return false; // TODO how to make this true but be able to  use WIDTH = match_parent for capsules
+        return mCanScrollVerticallyHorizontally;
     }
 
     @Override
     public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
 
-        calculateCapsuleWidthHeight(recycler);
+        if(mHasFixedSizeCapsules){
+            // perform an optimization. If mHasFixedSizeCapsules == true we will calculate a size of views only once
+            calculateCapsuleWidthHeight(recycler);
+        }
 
         mCurrentViewPosition = 0;
 
-        int halfViewHeight = mDecoratedChildHeight / 2;
-
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, halfViewHeight " + halfViewHeight);
         if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, state " + state);
-
-        layoutInFourthQuadrant(recycler, halfViewHeight);
-
-
+        layoutInFourthQuadrant(recycler, 0/*This is Recycler view Top == 0*/);
     }
 
     private void calculateCapsuleWidthHeight(RecyclerView.Recycler recycler) {
@@ -285,11 +299,35 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
          * won't change.
          */
 
-        mDecoratedChildWidth = getDecoratedMeasuredWidth(recycledCapsule);
-        mDecoratedChildHeight = getDecoratedMeasuredHeight(recycledCapsule);
+        mDecoratedCapsuleWidth = getDecoratedMeasuredWidth(recycledCapsule);
+        mDecoratedCapsuleHeight = getDecoratedMeasuredHeight(recycledCapsule);
 
         removeAndRecycleAllViews(recycler);
-        if(SHOW_LOGS) Log.v(TAG, "<< calculateCapsuleWidthHeight, mDecoratedChildWidth " + mDecoratedChildWidth + ", mDecoratedChildHeight " + mDecoratedChildHeight);
+
+        if(SHOW_LOGS) Log.v(TAG, "<< calculateCapsuleWidthHeight, mDecoratedCapsuleWidth " + mDecoratedCapsuleWidth + ", mDecoratedCapsuleHeight " + mDecoratedCapsuleHeight);
+    }
+
+    /**
+     * This is a wrapper method for {@link android.support.v7.widget.RecyclerView#measureChildWithMargins(android.view.View, int, int, int, int)}
+     *
+     * If capsules width is "match_parent" then we we need to return "false" from {@link #canScrollHorizontally()}
+     * If capsules height is "match_parent" then we we need to return "false" from {@link #canScrollVertically()}
+     *
+     * This method simply changes return values of {@link #canScrollHorizontally()} and {@link #canScrollVertically()} while measuring
+     * size of a child view
+     *
+     * @param child
+     * @param widthUsed
+     * @param heightUsed
+     */
+    public void measureChildWithMargins(View child, int widthUsed, int heightUsed) {
+        // change a value to "false "temporary while measuring
+        mCanScrollVerticallyHorizontally = false;
+
+        super.measureChildWithMargins(child, widthUsed, heightUsed);
+
+        // return a value to "true" because we do actually can scroll in both ways
+        mCanScrollVerticallyHorizontally = true;
     }
 
     public int getDecoratedMeasurement(View view) {
@@ -313,76 +351,116 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
      *                          |
      *                          |
      */
-    private void layoutInFourthQuadrant(RecyclerView.Recycler recycler, int halfViewHeight) {
-
-        int angleDegree = 270;
-
-        int viewCenterY = (int) (mOriginY + sineInQuadrant(angleDegree, 4) * mRadius);
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, initial viewCenterY " + viewCenterY);
-
-        int viewTop = viewCenterY + halfViewHeight;
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, initial viewTop " + viewTop);
-        boolean viewTopIsNotAtTheContainerTop = viewTop > mOriginY && angleDegree < 360 - ANGLE_DELTA /*360 degrees*/;
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, initial viewTopIsAtTheContainerTop " + viewTopIsNotAtTheContainerTop);
-
-        // while current view top didn't reach the top of RecyclerView we increase th angle and calculate nthe top.
-        // TODO: optimize somehow :)
-        while(viewTopIsNotAtTheContainerTop){
-            angleDegree += ANGLE_DELTA;
-            if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, new increased angleDegree " + angleDegree);
-            double sine = sineInQuadrant(angleDegree, 4);
-            if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, sine " + sine);
-
-            viewCenterY = (int) (mOriginY + sine * mRadius);
-            if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, new viewCenterY " + viewCenterY);
-
-            viewTop = viewCenterY + (halfViewHeight * getQuadrantSinMultiplier(4));
-            if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, viewTop " + viewTop);
-
-            viewTopIsNotAtTheContainerTop = viewTop > mOriginY && angleDegree < 360 - ANGLE_DELTA /*360 degrees*/;
-            if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, viewTopIsAtTheContainerTop " + viewTopIsNotAtTheContainerTop);
-        }
+    private void layoutInFourthQuadrant(RecyclerView.Recycler recycler, int previousViewBottom) {
 
         View firstView = recycler.getViewForPosition(0);
 
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, firstView.getWidth " + firstView.getWidth());
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, firstView.getHeight " + firstView.getHeight());
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, firstView.getLayoutParams " + firstView.getLayoutParams());
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, mRadius " + mRadius);
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, mOriginY " + mOriginY);
 
         addView(firstView);
 
-        measureChildWithMargins(firstView, 0, 0);
+        int decoratedCapsuleWidth;
+        int decoratedCapsuleHeight;
 
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, firstView.getWidth " + firstView.getWidth());
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, firstView.getHeight " + firstView.getHeight());
+        if(mHasFixedSizeCapsules){
+            // this is an optimization
+            if(mDecoratedCapsuleWidth == 0 || mDecoratedCapsuleHeight == 0){
+                throw new RuntimeException("mDecoratedCapsuleWidth " + mDecoratedCapsuleWidth + ", mDecoratedCapsuleHeight " + mDecoratedCapsuleHeight + ", values should be calculated earlier");
+            }
+            decoratedCapsuleWidth = mDecoratedCapsuleWidth;
+            decoratedCapsuleHeight = mDecoratedCapsuleHeight;
+        } else {
+            measureChildWithMargins(firstView, 0, 0);
+            decoratedCapsuleWidth = getDecoratedMeasuredWidth(firstView);
+            decoratedCapsuleHeight = getDecoratedMeasuredHeight(firstView);
+        }
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, decoratedCapsuleWidth " + decoratedCapsuleWidth);
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, decoratedCapsuleHeight " + decoratedCapsuleHeight);
 
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, firstView.getMeasuredWidth " + firstView.getMeasuredWidth());
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, firstView.getMeasuredHeight " + firstView.getMeasuredHeight());
+        int angleDegree = 360; // TODO: calculate it using bottom of previous view or save latest value
+
+        int viewCenterY = (int) (mOriginY + sineInQuadrant(angleDegree, 4) * mRadius);
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, initial viewCenterY " + viewCenterY);
+
+        int halfViewHeight = decoratedCapsuleHeight / 2;
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, halfViewHeight " + halfViewHeight);
+
+        // viewTop is higher than viewCenterY. And "higher" is up. That's why we subtract halfViewHeight;
+        int viewTop = viewCenterY - halfViewHeight;
+
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, initial viewTop " + viewTop);
+
+        // Right now we need to decrease the angle.
+        // Because we are in four quadrant. We can decrease from 360 to 270.
+        /**
+         *      |
+         *      |
+         *------|------
+         *      |       / We are in this quadrant and going in this way.
+         *      |  /___/
+         *         \
+         */
+
+        // When we calculate this value for the first time, "view top" is higher than previousViewBottom because it is "container top" and == 0
+        boolean viewTopIsNotAtTheContainerTop = isViewTopHigherThenViewCenter(previousViewBottom, viewTop);// && angleDegree < 360 - ANGLE_DELTA /*360 degrees*/;
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, initial viewTopIsNotAtTheContainerTop " + viewTopIsNotAtTheContainerTop);
+
+        if(!viewTopIsNotAtTheContainerTop){
+            throw new RuntimeException("Developer error. 'Top of view' cannot be lower than 'top of container' when we just start to calculate");
+        }
+
+        // while current "view top" didn't reach the bottom of previous view we decrease the angle and calculate the "top of view"
+        do {
+            angleDegree -= ANGLE_DELTA;
+            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, new decreased angleDegree " + angleDegree);
+            double sine = sineInQuadrant(angleDegree, 4);
+            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, sine " + sine);
+
+            viewCenterY = (int) (mOriginY + sine * mRadius);
+            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, new viewCenterY " + viewCenterY);
+
+            viewTop = viewCenterY + (halfViewHeight * getQuadrantSinMultiplier(4));
+            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, viewTop " + viewTop);
+
+            viewTopIsNotAtTheContainerTop = isViewTopHigherThenViewCenter(previousViewBottom, viewTop);// && angleDegree < 360 - ANGLE_DELTA /*360 degrees*/;
+            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, viewTopIsAtTheContainerTop " + viewTopIsNotAtTheContainerTop);
+            if(angleDegree < 270){
+                throw new RuntimeException("angleDegree less then 270");
+            }
+        } while (viewTopIsNotAtTheContainerTop);
+
         int left, top, right, bottom;
 
         top = viewCenterY + (halfViewHeight * getQuadrantSinMultiplier(4));
         bottom = viewCenterY - (halfViewHeight * getQuadrantSinMultiplier(4));
 
-        int halfViewWidth = mDecoratedChildWidth / 2;
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, halfViewWidth " + halfViewWidth);
+        int halfViewWidth = decoratedCapsuleWidth / 2;
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, halfViewWidth " + halfViewWidth);
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, angleDegree " + angleDegree);
 
         int viewCenterX = (int) (mOriginX + cosineInQuadrant(angleDegree, 4) * mRadius);
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, viewCenterX " + viewCenterX);
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, viewCenterX " + viewCenterX);
 
         left = viewCenterX - halfViewWidth;
         right = left + viewCenterX + halfViewWidth;
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, getWidth " + getWidth());
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, getHeight " + getHeight());
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, getWidth " + getWidth());
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, getHeight " + getHeight());
 
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, left " + left);
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, top " + top);
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, right " + right);
-        if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, bottom " + bottom);
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, left " + left);
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, top " + top);
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, right " + right);
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, bottom " + bottom);
 
         layoutDecorated(firstView, left, top, right, bottom);
     }
 
-
+    /**
+     * View top is higher when it's smaller then previous View Bottom
+     */
+    private boolean isViewTopHigherThenViewCenter(int previousViewBottom, int viewTop) {
+        return viewTop < previousViewBottom;
+    }
 
     public int getDecoratedMeasurementInOther(View view) {
         final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams)
@@ -439,7 +517,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
     private double sineInQuadrant(int angleDegree, int quadrant) {
 
         double correctedSine = Math.sin(Math.toRadians(angleDegree)) * getQuadrantSinMultiplier(quadrant);
-        if(SHOW_LOGS) Log.v(TAG, "sineInQuadrant, correctedSine " + correctedSine);
+        if(SHOW_LOGS) Log.v(TAG, String.format("sineInQuadrant, correctedSine %f", correctedSine));
         return correctedSine;
     }
 }
