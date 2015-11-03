@@ -40,7 +40,7 @@ public class DebugRecyclerView extends RecyclerView {
     private void init(){
         mPaint = new Paint();
         mPaint.setColor(Color.RED);
-        mPaint.setAlpha(100);
+        mPaint.setAlpha(100 /*This is not percents*/);
     }
 
     @Override

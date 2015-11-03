@@ -8,10 +8,6 @@ import android.view.View;
 
 import com.volokh.danylo.Config;
 
-import java.util.List;
-
-import static android.support.v7.widget.RecyclerView.NO_POSITION;
-
 /**
  * Created by danylo.volokh on 10/17/2015.
  */
@@ -35,7 +31,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
 
     private boolean mCanScrollVerticallyHorizontally = true;
 
-    private static final int ANGLE_DELTA = 2;
+    private static final int ANGLE_DELTA = 1;
 
     private OrientationHelper mOrientationHelper;
     private int mOrientation;
@@ -46,6 +42,12 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
         int THIRD_QUADRANT = 3;
         int FOURTH_QUADRANT = 4;
     }
+
+    /**
+     * This value is healed for optimization. We don't calculate angle from 360 every time.
+     * We reuse this value that was set during previous view layout.
+     */
+    private Integer mFourthQuadrantLastAngle;
 
     private final int mRadius;
 
@@ -67,184 +69,6 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
     public void setHasFixedSizeCapsules(boolean hasFixedSizeCapsules){
         mHasFixedSizeCapsules = hasFixedSizeCapsules;
     }
-
-    static class LayoutState {
-
-        final static String TAG = "LinearLayoutManager#LayoutState";
-
-        final static int LAYOUT_START = -1;
-
-        final static int LAYOUT_END = 1;
-
-        final static int INVALID_LAYOUT = Integer.MIN_VALUE;
-
-        final static int ITEM_DIRECTION_HEAD = -1;
-
-        final static int ITEM_DIRECTION_TAIL = 1;
-
-        final static int SCOLLING_OFFSET_NaN = Integer.MIN_VALUE;
-
-        private static final boolean DEBUG = true;
-
-        /**
-         * We may not want to recycle children in some cases (e.g. layout)
-         */
-        boolean mRecycle = true;
-
-        /**
-         * Pixel offset where layout should start
-         */
-        int mOffset;
-
-        /**
-         * Number of pixels that we should fill, in the layout direction.
-         */
-        int mAvailable;
-
-        /**
-         * Current position on the adapter to get the next item.
-         */
-        int mCurrentPosition;
-
-        /**
-         * Defines the direction in which the data adapter is traversed.
-         * Should be {@link #ITEM_DIRECTION_HEAD} or {@link #ITEM_DIRECTION_TAIL}
-         */
-        int mItemDirection;
-
-        /**
-         * Defines the direction in which the layout is filled.
-         * Should be {@link #LAYOUT_START} or {@link #LAYOUT_END}
-         */
-        int mLayoutDirection;
-
-        /**
-         * Used when LayoutState is constructed in a scrolling state.
-         * It should be set the amount of scrolling we can make without creating a new view.
-         * Settings this is required for efficient view recycling.
-         */
-        int mScrollingOffset;
-
-        /**
-         * Used if you want to pre-layout items that are not yet visible.
-         * The difference with {@link #mAvailable} is that, when recycling, distance laid out for
-         * {@link #mExtra} is not considered to avoid recycling visible children.
-         */
-        int mExtra = 0;
-
-        /**
-         * Equal to {@link RecyclerView.State#isPreLayout()}. When consuming scrap, if this value
-         * is set to true, we skip removed views since they should not be laid out in post layout
-         * step.
-         */
-        boolean mIsPreLayout = false;
-
-        /**
-         * The most recent {@link #scrollBy(int, RecyclerView.Recycler, RecyclerView.State)} amount.
-         */
-        int mLastScrollDelta;
-
-        /**
-         * When LLM needs to layout particular views, it sets this list in which case, LayoutState
-         * will only return views from this list and return null if it cannot find an item.
-         */
-        List<RecyclerView.ViewHolder> mScrapList = null;
-
-        /**
-         * @return true if there are more items in the data adapter
-         */
-        boolean hasMore(RecyclerView.State state) {
-            return mCurrentPosition >= 0 && mCurrentPosition < state.getItemCount();
-        }
-
-        /**
-         * Gets the view for the next element that we should layout.
-         * Also updates current item index to the next item, based on {@link #mItemDirection}
-         *
-         * @return The next element that we should layout.
-         */
-        View next(RecyclerView.Recycler recycler) {
-            if (mScrapList != null) {
-                return nextViewFromScrapList();
-            }
-            final View view = recycler.getViewForPosition(mCurrentPosition);
-            mCurrentPosition += mItemDirection;
-            return view;
-        }
-
-        /**
-         * Returns the next item from the scrap list.
-         * <p>
-         * Upon finding a valid VH, sets current item position to VH.itemPosition + mItemDirection
-         *
-         * @return View if an item in the current position or direction exists if not null.
-         */
-        private View nextViewFromScrapList() {
-            final int size = mScrapList.size();
-            for (int i = 0; i < size; i++) {
-                final View view = mScrapList.get(i).itemView;
-                final RecyclerView.LayoutParams lp = (RecyclerView.LayoutParams) view.getLayoutParams();
-                if (lp.isItemRemoved()) {
-                    continue;
-                }
-                if (mCurrentPosition == lp.getViewLayoutPosition()) {
-                    assignPositionFromScrapList(view);
-                    return view;
-                }
-            }
-            return null;
-        }
-
-        public void assignPositionFromScrapList() {
-            assignPositionFromScrapList(null);
-        }
-
-        public void assignPositionFromScrapList(View ignore) {
-            final View closest = nextViewInLimitedList(ignore);
-            if (closest == null) {
-                mCurrentPosition = NO_POSITION;
-            } else {
-                mCurrentPosition = ((RecyclerView.LayoutParams) closest.getLayoutParams())
-                        .getViewLayoutPosition();
-            }
-        }
-
-        public View nextViewInLimitedList(View ignore) {
-            int size = mScrapList.size();
-            View closest = null;
-            int closestDistance = Integer.MAX_VALUE;
-            if (DEBUG && mIsPreLayout) {
-                throw new IllegalStateException("Scrap list cannot be used in pre layout");
-            }
-            for (int i = 0; i < size; i++) {
-                View view = mScrapList.get(i).itemView;
-                final RecyclerView.LayoutParams lp = (RecyclerView.LayoutParams) view.getLayoutParams();
-                if (view == ignore || lp.isItemRemoved()) {
-                    continue;
-                }
-                final int distance = (lp.getViewLayoutPosition() - mCurrentPosition) *
-                        mItemDirection;
-                if (distance < 0) {
-                    continue; // item is not in current direction
-                }
-                if (distance < closestDistance) {
-                    closest = view;
-                    closestDistance = distance;
-                    if (distance == 0) {
-                        break;
-                    }
-                }
-            }
-            return closest;
-        }
-
-        void log() {
-            Log.d(TAG, "avail:" + mAvailable + ", ind:" + mCurrentPosition + ", dir:" +
-                    mItemDirection + ", offset:" + mOffset + ", layoutDir:" + mLayoutDirection);
-        }
-    }
-
-
 
     @Override
     public RecyclerView.LayoutParams generateDefaultLayoutParams() {
@@ -278,13 +102,14 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
         if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, mRadius " + mRadius);
         if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, mOriginY " + mOriginY);
 
-        int previoutViewBottom = 0;
+        int previousViewBottom = 0;
+        mFourthQuadrantLastAngle = 360;
 
-        for(int i=0; i< 2; i++){
+        for(int i = 0; i < 2; i++){
             View view = recycler.getViewForPosition(i);
             addView(view);
-            layoutInFourthQuadrant(view, recycler, previoutViewBottom/*This is Recycler view Top == 0*/);
-            previoutViewBottom = view.getBottom();
+            layoutInFourthQuadrant(view, recycler, previousViewBottom/*This is Recycler view Top == 0*/);
+            previousViewBottom = view.getBottom();
         }
     }
 
@@ -356,13 +181,17 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
      *                          |
      *     -------------------------------------------
      *                          |    FOURTH_QUADRANT
-     *       THIRD_QUADRANT     |         _
-     *                          |         /|
-     *                          |       _/  we are going on the circle in this direction
-     *                          |
+     *       THIRD_QUADRANT     |
+     *                          |         /
+     *                          |       |/  we are going on the circle in this direction
+     *                          |       |_
      *                          |
      */
     private void layoutInFourthQuadrant(View view, RecyclerView.Recycler recycler, int previousViewBottom) {
+        if(SHOW_LOGS) Log.v(TAG, ">> layoutInFourthQuadrant");
+
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, previousViewBottom " + previousViewBottom);
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, mFourthQuadrantLastAngle " + mFourthQuadrantLastAngle);
 
         int decoratedCapsuleWidth;
         int decoratedCapsuleHeight;
@@ -382,9 +211,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, decoratedCapsuleWidth " + decoratedCapsuleWidth);
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, decoratedCapsuleHeight " + decoratedCapsuleHeight);
 
-        int angleDegree = 360; // TODO: calculate it using bottom of previous view or save latest value
-
-        int viewCenterY = (int) (mOriginY + sineInQuadrant(angleDegree, 4) * mRadius);
+        int viewCenterY = (int) (mOriginY + sineInQuadrant(mFourthQuadrantLastAngle, 4) * mRadius);
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, initial viewCenterY " + viewCenterY);
 
         int halfViewHeight = decoratedCapsuleHeight / 2;
@@ -407,18 +234,14 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
          */
 
         // When we calculate this value for the first time, "view top" is higher than previousViewBottom because it is "container top" and == 0
-        boolean viewTopIsNotAtTheContainerTop = isViewTopHigherThenViewCenter(previousViewBottom, viewTop);// && angleDegree < 360 - ANGLE_DELTA /*360 degrees*/;
-        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, initial viewTopIsNotAtTheContainerTop " + viewTopIsNotAtTheContainerTop);
-
-        if(!viewTopIsNotAtTheContainerTop){
-            throw new RuntimeException("Developer error. 'Top of view' cannot be lower than 'top of container' when we just start to calculate");
-        }
+        boolean viewTopIsHigherThenPreviousViewBottom = isViewTopHigherThenPreviousViewBottom(previousViewBottom, viewTop);// && angleDegree < 360 - ANGLE_DELTA /*360 degrees*/;
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, initial viewTopIsNotAtTheContainerTop " + viewTopIsHigherThenPreviousViewBottom);
 
         // while current "view top" didn't reach the bottom of previous view we decrease the angle and calculate the "top of view"
         do {
-            angleDegree -= ANGLE_DELTA;
-            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, new decreased angleDegree " + angleDegree);
-            double sine = sineInQuadrant(angleDegree, 4);
+            mFourthQuadrantLastAngle -= ANGLE_DELTA;
+            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, new decreased mFourthQuadrantLastAngle " + mFourthQuadrantLastAngle);
+            double sine = sineInQuadrant(mFourthQuadrantLastAngle, 4);
             if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, sine " + sine);
 
             viewCenterY = (int) (mOriginY + sine * mRadius);
@@ -427,12 +250,15 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
             viewTop = viewCenterY + (halfViewHeight * getQuadrantSinMultiplier(4));
             if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, viewTop " + viewTop);
 
-            viewTopIsNotAtTheContainerTop = isViewTopHigherThenViewCenter(previousViewBottom, viewTop);// && angleDegree < 360 - ANGLE_DELTA /*360 degrees*/;
-            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, viewTopIsAtTheContainerTop " + viewTopIsNotAtTheContainerTop);
-            if(angleDegree < 270){
+            viewTopIsHigherThenPreviousViewBottom = isViewTopHigherThenPreviousViewBottom(previousViewBottom, viewTop);// && angleDegree < 360 - ANGLE_DELTA /*360 degrees*/;
+            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, viewTopIsNotAtTheContainerTop " + viewTopIsHigherThenPreviousViewBottom);
+            if(mFourthQuadrantLastAngle < 270){
+                if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, mFourthQuadrantLastAngle " + mFourthQuadrantLastAngle + ", break");
+
+//                break;
                 throw new RuntimeException("angleDegree less then 270");
             }
-        } while (viewTopIsNotAtTheContainerTop);
+        } while (viewTopIsHigherThenPreviousViewBottom);
 
         int left, top, right, bottom;
 
@@ -441,13 +267,13 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
 
         int halfViewWidth = decoratedCapsuleWidth / 2;
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, halfViewWidth " + halfViewWidth);
-        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, angleDegree " + angleDegree);
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, mFourthQuadrantLastAngle " + mFourthQuadrantLastAngle);
 
-        int viewCenterX = (int) (mOriginX + cosineInQuadrant(angleDegree, 4) * mRadius);
+        int viewCenterX = (int) (mOriginX + cosineInQuadrant(mFourthQuadrantLastAngle, 4) * mRadius);
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, viewCenterX " + viewCenterX);
 
         left = viewCenterX - halfViewWidth;
-        right = left + viewCenterX + halfViewWidth;
+        right = viewCenterX + halfViewWidth;
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, getWidth " + getWidth());
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, getHeight " + getHeight());
 
@@ -457,12 +283,13 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, bottom " + bottom);
 
         layoutDecorated(view, left, top, right, bottom);
+        if(SHOW_LOGS) Log.v(TAG, "<< layoutInFourthQuadrant");
     }
 
     /**
      * View top is higher when it's smaller then previous View Bottom
      */
-    private boolean isViewTopHigherThenViewCenter(int previousViewBottom, int viewTop) {
+    private boolean isViewTopHigherThenPreviousViewBottom(int previousViewBottom, int viewTop) {
         return viewTop < previousViewBottom;
     }
 
