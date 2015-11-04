@@ -18,7 +18,7 @@ public class Capsule extends LinearLayout {
 
     {
         mPaint.setColor(Color.BLACK);
-        mPaint.setStrokeWidth(5);
+        mPaint.setStrokeWidth(3);
     }
 
     public Capsule(Context context) {
@@ -42,6 +42,12 @@ public class Capsule extends LinearLayout {
     public void draw(Canvas canvas) {
         super.draw(canvas);
         // draw a cross
+        canvas.drawLine(1, 1, getMeasuredWidth(), 1, mPaint);
+        canvas.drawLine(1, getHeight()-1, getMeasuredWidth(), getHeight()-1, mPaint);
+        canvas.drawLine(1, 1, 1, getHeight()-1, mPaint);
+        canvas.drawLine(getMeasuredWidth()-1, 1, getMeasuredWidth()-1, getHeight()-1, mPaint);
+
+
         canvas.drawLine(getMeasuredWidth()/2, 0, getMeasuredWidth()/2, getMeasuredHeight(), mPaint);
         canvas.drawLine(0, getMeasuredHeight()/2, getMeasuredWidth(), getMeasuredHeight()/2, mPaint);
     }

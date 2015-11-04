@@ -7,6 +7,9 @@ import android.util.Log;
 import android.view.View;
 
 import com.volokh.danylo.Config;
+import com.volokh.danylo.layoutmanager.circle_helper.UnitCircleFourthQuadrantHelper;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by danylo.volokh on 10/17/2015.
@@ -15,6 +18,8 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
 
     private static final boolean SHOW_LOGS = Config.SHOW_LOGS;
     private static final String TAG = LondonEyeLayoutManager.class.getSimpleName();
+
+    private final UnitCircleFourthQuadrantHelper mUnitCircleHelper;
 
     /**
      * If this is set to "true" we will calculate size of capsules only once.
@@ -47,7 +52,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
      * This value is healed for optimization. We don't calculate angle from 360 every time.
      * We reuse this value that was set during previous view layout.
      */
-    private Integer mFourthQuadrantLastAngle;
+    private AtomicInteger mFourthQuadrantLastAngle = new AtomicInteger();
 
     private final int mRadius;
 
@@ -63,6 +68,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
 
     public LondonEyeLayoutManager(FragmentActivity activity, int screenWidthPixels) {
         mRadius = screenWidthPixels / 2;
+        mUnitCircleHelper = new UnitCircleFourthQuadrantHelper(mRadius);
         requestLayout();
     }
 
@@ -103,9 +109,9 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
         if(SHOW_LOGS) Log.v(TAG, "onLayoutChildren, mOriginY " + mOriginY);
 
         int previousViewBottom = 0;
-        mFourthQuadrantLastAngle = 360;
+        mFourthQuadrantLastAngle.set(360);
 
-        for(int i = 0; i < 2; i++){
+        for(int i = 0; i < 4; i++){
             View view = recycler.getViewForPosition(i);
             addView(view);
             layoutInFourthQuadrant(view, recycler, previousViewBottom/*This is Recycler view Top == 0*/);
@@ -211,7 +217,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, decoratedCapsuleWidth " + decoratedCapsuleWidth);
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, decoratedCapsuleHeight " + decoratedCapsuleHeight);
 
-        int viewCenterY = (int) (mOriginY + sineInQuadrant(mFourthQuadrantLastAngle, 4) * mRadius);
+        int viewCenterY = (int) (mOriginY + sineInQuadrant(mFourthQuadrantLastAngle.get(), 4) * mRadius);
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, initial viewCenterY " + viewCenterY);
 
         int halfViewHeight = decoratedCapsuleHeight / 2;
@@ -222,43 +228,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
 
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, initial viewTop " + viewTop);
 
-        // Right now we need to decrease the angle.
-        // Because we are in four quadrant. We can decrease from 360 to 270.
-        /**
-         *      |
-         *      |
-         *------|------
-         *      |       / We are in this quadrant and going in this way.
-         *      |  /___/
-         *         \
-         */
-
-        // When we calculate this value for the first time, "view top" is higher than previousViewBottom because it is "container top" and == 0
-        boolean viewTopIsHigherThenPreviousViewBottom = isViewTopHigherThenPreviousViewBottom(previousViewBottom, viewTop);// && angleDegree < 360 - ANGLE_DELTA /*360 degrees*/;
-        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, initial viewTopIsNotAtTheContainerTop " + viewTopIsHigherThenPreviousViewBottom);
-
-        // while current "view top" didn't reach the bottom of previous view we decrease the angle and calculate the "top of view"
-        do {
-            mFourthQuadrantLastAngle -= ANGLE_DELTA;
-            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, new decreased mFourthQuadrantLastAngle " + mFourthQuadrantLastAngle);
-            double sine = sineInQuadrant(mFourthQuadrantLastAngle, 4);
-            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, sine " + sine);
-
-            viewCenterY = (int) (mOriginY + sine * mRadius);
-            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, new viewCenterY " + viewCenterY);
-
-            viewTop = viewCenterY + (halfViewHeight * getQuadrantSinMultiplier(4));
-            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, viewTop " + viewTop);
-
-            viewTopIsHigherThenPreviousViewBottom = isViewTopHigherThenPreviousViewBottom(previousViewBottom, viewTop);// && angleDegree < 360 - ANGLE_DELTA /*360 degrees*/;
-            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, viewTopIsNotAtTheContainerTop " + viewTopIsHigherThenPreviousViewBottom);
-            if(mFourthQuadrantLastAngle < 270){
-                if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, mFourthQuadrantLastAngle " + mFourthQuadrantLastAngle + ", break");
-
-//                break;
-                throw new RuntimeException("angleDegree less then 270");
-            }
-        } while (viewTopIsHigherThenPreviousViewBottom);
+        viewCenterY = mUnitCircleHelper.findViewCenterY(previousViewBottom, halfViewHeight, viewTop, mFourthQuadrantLastAngle);
 
         int left, top, right, bottom;
 
@@ -269,7 +239,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, halfViewWidth " + halfViewWidth);
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, mFourthQuadrantLastAngle " + mFourthQuadrantLastAngle);
 
-        int viewCenterX = (int) (mOriginX + cosineInQuadrant(mFourthQuadrantLastAngle, 4) * mRadius);
+        int viewCenterX = (int) (mOriginX + cosineInQuadrant(mFourthQuadrantLastAngle.get(), 4) * mRadius);
         if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, viewCenterX " + viewCenterX);
 
         left = viewCenterX - halfViewWidth;
@@ -284,6 +254,47 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager {
 
         layoutDecorated(view, left, top, right, bottom);
         if(SHOW_LOGS) Log.v(TAG, "<< layoutInFourthQuadrant");
+    }
+
+    private int findViewCenterY(int previousViewBottom, int halfViewHeight, int viewTop) {
+        // Right now we need to decrease the angle.
+        // Because we are in four quadrant. We can decrease from 360 to 270.
+        /**
+         *      |
+         *      |
+         *------|------
+         *      |       / We are in this quadrant and going in this way.
+         *      |  /___/
+         *         \
+         */
+
+        int viewCenterY;// When we calculate this value for the first time, "view top" is higher than previousViewBottom because it is "container top" and == 0
+        boolean viewTopIsHigherThenPreviousViewBottom = isViewTopHigherThenPreviousViewBottom(previousViewBottom, viewTop);// && angleDegree < 360 - ANGLE_DELTA /*360 degrees*/;
+        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, initial viewTopIsNotAtTheContainerTop " + viewTopIsHigherThenPreviousViewBottom);
+
+        // while current "view top" didn't reach the bottom of previous view we decrease the angle and calculate the "top of view"
+        do {
+            mFourthQuadrantLastAngle.set(mFourthQuadrantLastAngle.get() - ANGLE_DELTA);
+            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, new decreased mFourthQuadrantLastAngle " + mFourthQuadrantLastAngle);
+            double sine = sineInQuadrant(mFourthQuadrantLastAngle.get(), 4);
+            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, sine " + sine);
+
+            viewCenterY = (int) (mOriginY + sine * mRadius);
+            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, new viewCenterY " + viewCenterY);
+
+            viewTop = viewCenterY + (halfViewHeight * getQuadrantSinMultiplier(4));
+            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, viewTop " + viewTop);
+
+            viewTopIsHigherThenPreviousViewBottom = isViewTopHigherThenPreviousViewBottom(previousViewBottom, viewTop);// && angleDegree < 360 - ANGLE_DELTA /*360 degrees*/;
+            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, viewTopIsNotAtTheContainerTop " + viewTopIsHigherThenPreviousViewBottom);
+            if(mFourthQuadrantLastAngle.get() < 270){
+                if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, mFourthQuadrantLastAngle " + mFourthQuadrantLastAngle + ", break");
+
+//                break;
+                throw new RuntimeException("angleDegree less then 270");
+            }
+        } while (viewTopIsHigherThenPreviousViewBottom);
+        return viewCenterY;
     }
 
     /**
