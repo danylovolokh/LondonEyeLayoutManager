@@ -67,8 +67,8 @@ public class UnitCircleFourthQuadrantHelper {
             if(fourthQuadrantLastAngle.get() < 270){
                 if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, mFourthQuadrantLastAngle " + fourthQuadrantLastAngle + ", break");
 
-//                break;
-                throw new RuntimeException("angleDegree less then 270");
+                break;
+//                throw new RuntimeException("angleDegree less then 270");
             }
         } while (viewTopIsHigherThenPreviousViewBottom);
 

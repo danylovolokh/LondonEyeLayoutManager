@@ -79,7 +79,7 @@ public class MainActivity extends ActionBarActivity {
 
             int screenWidth = getActivity().getResources().getDisplayMetrics().widthPixels;
 
-            mLondonEyeLayoutManager = new LondonEyeLayoutManager(getActivity(), screenWidth);
+            mLondonEyeLayoutManager = new LondonEyeLayoutManager(getActivity(), screenWidth, mRecyclerView);
             mRecyclerView.setLayoutManager(mLondonEyeLayoutManager);//new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
 
             mVideoRecyclerViewAdapter = new LondonEyeListAdapter(getActivity(), mList);
