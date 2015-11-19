@@ -41,12 +41,20 @@ public class QuadrantHelper {
         fillFourthQuadrantCircumference();
     }
 
+    /**
+     *      |
+     *      |         x
+     *------|---------->
+     *      |           The formula is R^2 = x^2 + y^2
+     *      |           We are calculating a circle points.
+     *      |           Start and y=1 and increment y up to "radius"
+     *    y V
+     */
     private void fillFourthQuadrantCircumference() {
-        if(SHOW_LOGS) Log.v(TAG, ">> fillFourthQuadrantCircumference, size " + mFirstQuadrantCircumference.size());
         if(SHOW_LOGS) Log.v(TAG, ">> fillFourthQuadrantCircumference, size " + mFirstQuadrantCircumference.size());
 
         /**
-         * Basically in fourth quadrant y is negative. but devices display "thinks" differently so y is positive
+         * Basically in fourth quadrant y is negative. But devices display "thinks" differently so y is positive
          */
         for(int y = 1; y <= mRadius; y++){
             if(SHOW_LOGS) Log.v(TAG, "fillFourthQuadrantCircumference, y " + y);
@@ -84,43 +92,114 @@ public class QuadrantHelper {
         if(SHOW_LOGS) Log.v(TAG, "<< fillFirstQuadrantCircumference, " + mFirstQuadrantCircumference);
     }
 
+
+    /**
+     *      |
+     *------|------------------------------------>
+     *      |                                |
+     *      |                   ____________/_____
+     *      |                  |           /      |
+     *      |                  |  View 1  /       |
+     *      |                  |        _/        |
+     *      |             _____|_______/__________|
+     *      |            |          _/      |
+     *      |            |Previous_/        |
+     *      |            |View  /           |
+     *      |            |_____/____________| <---- previousViewBottomY
+     *      |               _/
+     *      |          ____/
+     *      |_________/
+     *      |               viewTop --->   __________________ _______
+     *      |                             |   New View       |
+     *      |                             |                  |       halfViewHeight
+     *      V                             |       _|_        |_______
+     *                                    |        |         |
+     *                                    |    viewCenterY   |       halfViewHeight
+     *                                    |__________________|_______
+     */
+
     public int findViewCenterY(int previousViewBottomY, int halfViewHeight, int viewTop) {
         if(SHOW_LOGS) Log.v(TAG, ">> findViewCenterY, previousViewBottomY " + previousViewBottomY);
-
-        /**
-         *      |
-         *      |
-         *------|------
-         *      |       / We are in this quadrant and going in this way.
-         *      |  /___/
-         *         \
-         */
 
         // When we calculate this value for the first time, "view top" is higher than previousViewBottom because it is "container top" and == 0
         int viewCenterY = previousViewBottomY;
 
         boolean viewTopIsHigherThenPreviousViewBottom = isViewTopHigherThenPreviousViewBottom(previousViewBottomY, viewTop);
         if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, initial viewTopIsNotAtTheContainerTop " + viewTopIsHigherThenPreviousViewBottom);
-
+        boolean isViewCenterYOnTheCircle;
         do {
 
             viewCenterY++;
 
             if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, new viewCenterY " + viewCenterY);
 
-            viewTop = viewCenterY - halfViewHeight;
-            if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, viewTop " + viewTop);
+            isViewCenterYOnTheCircle = isViewCenterYOnTheFourthQuadrantCircle(viewCenterY);
+            if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, isViewCenterYOnTheCircle " + isViewCenterYOnTheCircle);
 
-            viewTopIsHigherThenPreviousViewBottom = isViewTopHigherThenPreviousViewBottom(previousViewBottomY, viewTop);// && angleDegree < 360 - ANGLE_DELTA /*360 degrees*/;
-            if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, viewTopIsNotAtTheContainerTop " + viewTopIsHigherThenPreviousViewBottom);
+            if(isViewCenterYOnTheCircle){
+                viewTop = viewCenterY - halfViewHeight;
+                if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, viewTop " + viewTop);
 
-            if(!viewTopIsHigherThenPreviousViewBottom){
-                if(SHOW_LOGS) Log.i(TAG, "findViewCenterY, viewCenterY " + viewCenterY);
+                viewTopIsHigherThenPreviousViewBottom = isViewTopHigherThenPreviousViewBottom(previousViewBottomY, viewTop);// && angleDegree < 360 - ANGLE_DELTA /*360 degrees*/;
+                if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, viewTopIsNotAtTheContainerTop " + viewTopIsHigherThenPreviousViewBottom);
+
+                if(!viewTopIsHigherThenPreviousViewBottom){
+                    if(SHOW_LOGS) Log.i(TAG, "findViewCenterY, viewCenterY " + viewCenterY);
+                }
+            } else {
+                if(SHOW_LOGS) {
+                    Log.v(TAG, "findViewCenterY, view center Y is no longer on the circle");
+                    Log.w(TAG, "findViewCenterY, this view should not be placed below previous view. Return -1");
+                }
+                viewCenterY = -1;
             }
 
-        } while (viewTopIsHigherThenPreviousViewBottom);
+        } while (viewTopIsHigherThenPreviousViewBottom && isViewCenterYOnTheCircle);
 
         return viewCenterY;
+    }
+
+
+    /**
+     *      |
+     *------|-------------------->
+     *      |    __________
+     *      |   |          |
+     *      |   |Previous  _/
+     *      |   |View    _/|
+     *      |   |_______/__|
+     *      |        _/
+     *      |      /  Here <---- If new View center Y is still on the circle it will return true
+     *      |_____/
+     *      |
+     *      V
+     *
+     *      |
+     *      |
+     *------|-------------------->
+     *      |      _________
+     *      |     |       _/|
+     *      |     |     _/  |
+     *      |     |   _/    |
+     *      |     | _/      |
+     *      |_____|/        |
+     *      |     | Previous|
+     *      |     |  View   |
+     *      |     |_________|
+     *      V      Here <---- If new View center Y is no longer on the circle it will return false
+     *
+     */
+
+    private boolean isViewCenterYOnTheFourthQuadrantCircle(int viewCenterY) {
+        if(SHOW_LOGS) Log.v(TAG, "isViewCenterYOnTheFourthQuadrantCircle, viewCenterY " + viewCenterY);
+
+        Point lastPointInFourthQuadrant = mFourthQuadrantCircumference.get(mFourthQuadrantCircumference.size()-1);
+        if(SHOW_LOGS) Log.v(TAG, "isViewCenterYOnTheFourthQuadrantCircle, lastPointInFourthQuadrant " + lastPointInFourthQuadrant);
+
+        boolean isViewCenterYOnTheCircle = lastPointInFourthQuadrant.y >= viewCenterY;
+        if(SHOW_LOGS) Log.v(TAG, "isViewCenterYOnTheFourthQuadrantCircle " + isViewCenterYOnTheCircle);
+
+        return isViewCenterYOnTheCircle;
     }
 
     /**

@@ -185,16 +185,28 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
         boolean nextViewIsVisible;
 
-        int index = 4;
+        int index = 5;
         do{
             View view = recycler.getViewForPosition(mFirstVisiblePosition);
             addView(view);
-            nextViewIsVisible = mLayouter.layoutInFourthQuadrant(view, previousViewBottom);
+            mLayouter.layoutInFourthQuadrant(view, previousViewBottom);
+
+            boolean isViewFullyVisible = isViewFullyVisible(view);
+            if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, isViewFullyVisible " + isViewFullyVisible);
+
             previousViewBottom = view.getBottom();
             mFirstVisiblePosition++;
             index--;
         } while (index >0); // TODO: use nextViewIsVisible to
 
+    }
+
+    private boolean isViewFullyVisible(View view) {
+        Rect visibleRect = new Rect();
+        view.getLocalVisibleRect(visibleRect);
+        if(SHOW_LOGS) Log.v(TAG, "isViewFullyVisible visibleRect " + visibleRect);
+
+        return view.getLocalVisibleRect(visibleRect);
     }
 
     // TODO: move it to layout-er

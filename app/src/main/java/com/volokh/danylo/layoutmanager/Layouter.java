@@ -39,7 +39,7 @@ public class Layouter {
         mQuadrantHelper = new QuadrantHelper(mRadius);
     }
 
-    public boolean layoutInFourthQuadrant(View view, int previousViewBottom) {
+    public void layoutInFourthQuadrant(View view, int previousViewBottom) {
         if (SHOW_LOGS)
             Log.v(TAG, ">> layoutInFourthQuadrant, previousViewBottom " + previousViewBottom);
 
@@ -65,36 +65,36 @@ public class Layouter {
         if (SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, initial viewTop " + viewTop);
 
         viewCenterY = mQuadrantHelper.findViewCenterY(previousViewBottom, halfViewHeight, viewTop);
+        if (SHOW_LOGS) Log.i(TAG, "layoutInFourthQuadrant, viewCenterY " + viewCenterY);
 
-        if (SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, final viewCenterY " + viewCenterY);
+        if(viewCenterY != -1){
+            if (SHOW_LOGS) Log.i(TAG, "layoutInFourthQuadrant, final viewCenterY " + viewCenterY);
 
-        int left, top, right, bottom;
+            int left, top, right, bottom;
 
-        top = viewCenterY - halfViewHeight;
-        bottom = viewCenterY + halfViewHeight;
+            top = viewCenterY - halfViewHeight;
+            bottom = viewCenterY + halfViewHeight;
 
-        int halfViewWidth = decoratedCapsuleWidth / 2;
-        if (SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, halfViewWidth " + halfViewWidth);
+            int halfViewWidth = decoratedCapsuleWidth / 2;
+            if (SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, halfViewWidth " + halfViewWidth);
 
-        int viewCenterX = mQuadrantHelper.getXFromYInFourthQuadrant(viewCenterY);
-        if (SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, viewCenterX " + viewCenterX);
+            int viewCenterX = mQuadrantHelper.getXFromYInFourthQuadrant(viewCenterY);
+            if (SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, viewCenterX " + viewCenterX);
 
-        left = viewCenterX - halfViewWidth;
-        right = viewCenterX + halfViewWidth;
+            left = viewCenterX - halfViewWidth;
+            right = viewCenterX + halfViewWidth;
 
-        if (SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, left " + left);
-        if (SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, top " + top);
-        if (SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, right " + right);
-        if (SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, bottom " + bottom);
+            if (SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, left " + left);
+            if (SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, top " + top);
+            if (SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, right " + right);
+            if (SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, bottom " + bottom);
 
-        mCallback.layoutDecorated(view, left, top, right, bottom);
+            mCallback.layoutDecorated(view, left, top, right, bottom);
+        } else {
+            // TODO: try to find View center X and then Y
+        }
 
-        Rect visibleRect = new Rect();
-        mCallback.getHitRect(visibleRect);
-        boolean isViewVisible = view.getLocalVisibleRect(visibleRect);
-        if (SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, isViewVisible " + isViewVisible);
 
         if (SHOW_LOGS) Log.v(TAG, "<< layoutInFourthQuadrant");
-        return isViewVisible;
     }
 }
