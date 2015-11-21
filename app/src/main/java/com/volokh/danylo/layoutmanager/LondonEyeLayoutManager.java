@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Created by danylo.volokh on 10/17/2015.
  */
-public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implements Layouter.Callback {
+public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implements LayouterCallback {
 
     private static final boolean SHOW_LOGS = Config.SHOW_LOGS;
     private static final String TAG = LondonEyeLayoutManager.class.getSimpleName();
@@ -24,7 +24,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
     private final RecyclerView mRecyclerView;
 
-    private final Layouter mLayouter;
+    private final CircumferenceLayouter mLayouter;
 
     /**
      * If this is set to "true" we will calculate size of capsules only once.
@@ -62,19 +62,27 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
             );
         } else {
             measureChildWithMargins(view, 0, 0);
+
+            int measuredWidth = getDecoratedMeasuredWidth(view);
+            int measuredHeight = getDecoratedMeasuredHeight(view);
+
+            int diameter = mRadius*2;
+
+            if(SHOW_LOGS) Log.i(TAG, "getWidthHeightPair, measuredWidth " + measuredWidth + ", measuredHeight " + measuredHeight);
+
+            if(measuredWidth > diameter || measuredHeight > diameter){
+                throw new RuntimeException("View size is bigger than diameter. " +
+                        "\nWe are unable to layout multiple views. " +
+                        "\nDefine a better algorithm and let us know :)" +
+                        "\n, measuredWidth " + measuredWidth + ", measuredHeight " + measuredHeight + ", diameter " + diameter);
+            }
+
             widthHeight = new Pair<>(
-                    getDecoratedMeasuredWidth(view),
-                    getDecoratedMeasuredHeight(view)
+                    measuredWidth,
+                    measuredHeight
             );
         }
         return widthHeight;
-    }
-
-    interface Circle{
-        int FIRST_QUADRANT = 1;
-        int SECOND_QUADRANT = 2;
-        int THIRD_QUADRANT = 3;
-        int FOURTH_QUADRANT = 4;
     }
 
     /**
@@ -104,7 +112,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
         mRecyclerView = recyclerView;
 
         requestLayout();
-        mLayouter = new Layouter(this, mRadius);
+        mLayouter = new CircumferenceLayouter(this, mRadius);
     }
 
     public void setHasFixedSizeCapsules(boolean hasFixedSizeCapsules){
@@ -181,7 +189,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
             Log.v(TAG, "onLayoutChildren, mFirstVisiblePosition " + mFirstVisiblePosition);        }
 
 
-        int previousViewBottom = 0;
+        ViewCoordinates previousViewCoordinates = new ViewCoordinates(0, 0, 0);
 
         boolean nextViewIsVisible;
 
@@ -189,12 +197,15 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
         do{
             View view = recycler.getViewForPosition(mFirstVisiblePosition);
             addView(view);
-            mLayouter.layoutInFourthQuadrant(view, previousViewBottom);
+            mLayouter.layoutIn_1st_4th_3rd_Quadrant(view, previousViewCoordinates);
 
             boolean isViewFullyVisible = isViewFullyVisible(view);
             if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, isViewFullyVisible " + isViewFullyVisible);
 
-            previousViewBottom = view.getBottom();
+            // We update coordinates instead of creating new object to keep the heap clean
+            previousViewCoordinates.updateCoordinates(view);
+            if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, previousViewCoordinates " + previousViewCoordinates);
+
             mFirstVisiblePosition++;
             index--;
         } while (index >0); // TODO: use nextViewIsVisible to
