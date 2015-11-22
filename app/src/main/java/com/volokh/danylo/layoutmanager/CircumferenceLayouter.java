@@ -1,6 +1,5 @@
 package com.volokh.danylo.layoutmanager;
 
-import android.graphics.Rect;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
@@ -56,23 +55,23 @@ public class CircumferenceLayouter {
      *                                               |                    |in this    |  quadrant   |
      *                                               |                    |            \            |
      *                                               |                    |            |            |
-     *  ---------------------------------------------|DDDDDDDDDDDDDDDDDDDD|DDDDDDDDDDDDDDDDDDDDDDDDD|DDDD->
-     *            \          3rd Quadrant            D   4th Quadrant     |            /            | <- We need this view to fill the gap here
-     *            |                                  D                   _|____________|____________|
-     *            |                                  D                  |Previous      |          |
-     *             \                                 D                  |Previous     /           |
-     *              |                                D                  |View        |            |
-     *               \                               D             _____|___________/_____________|_
-     *                |                              D            |                 |               |
-     *                 |                             D            |Previous        |                |
-     *                  \                            D            |View           /                 |
-     *                   \                           D            |______________/__________________| <---- previousViewBottomY
-     *                    \__                        D                        __/
-     *                       ---___                  D                  ___---
-     *                             -----_____________D_____________-----
-     *                                               D               viewTop --->   __________________ _______
-     *                                               D                             |   New View       |
-     *                                               D                             |                  |       halfViewHeight
+     *  ---------------------------------------------|********************|*************************|****->
+     *            \          3rd Quadrant            *   4th Quadrant     |            /            | <- We need this view to fill the gap here
+     *            |                                  *                   _|____________|____________|
+     *            |                                  *                  |Previous      |          |
+     *             \                                 *                  |Previous     /           |
+     *              |                                *                  |View        |            |
+     *               \                               *             _____|___________/_____________|_
+     *                |                              *            |                 |               |
+     *                 |                             *            |Previous        |                |
+     *                  \                            *            |View           /                 |
+     *                   \                           *            |______________/__________________| <---- previousViewBottomY
+     *                    \__                        *                        __/
+     *                       ---___                  *                  ___---
+     *                             -----_____________*_____________-----
+     *                                               *               viewTop --->   __________________ _______
+     *                                               *                             |   New View       |
+     *                                               *                             |                  |       halfViewHeight
      *                                               V                             |       _|_        |_______
      *                                                                             |        |         |
      *                                                                             |    viewCenterY   |       halfViewHeight
@@ -82,7 +81,7 @@ public class CircumferenceLayouter {
      * TODO : If we don't find a suitable point below we try to find it to the left of previous view left
      *
      */
-    public void layoutIn_1st_4th_3rd_Quadrant(View view, ViewCoordinates previousViewCoordinates) {
+    public void layoutIn_1st_4th_3rd_Quadrant(View view, ViewData previousViewCoordinates) {
         if (SHOW_LOGS)
             Log.v(TAG, ">> layoutIn_1st_4th_3rd_Quadrant, previousViewCoordinates " + previousViewCoordinates);
 

@@ -61,11 +61,9 @@ public class MainActivity extends ActionBarActivity {
 
         private DebugRecyclerView mRecyclerView;
 
-//        private LinearLayoutManager mLayoutManager;
         private LondonEyeLayoutManager mLondonEyeLayoutManager;
 
         private LondonEyeListAdapter mVideoRecyclerViewAdapter;
-        private RecyclerView mRecyclerView2;
 
         public PlaceholderFragment() {
         }
@@ -75,23 +73,24 @@ public class MainActivity extends ActionBarActivity {
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
+            int screenWidth = getActivity().getResources().getDisplayMetrics().widthPixels;
+
+            int circleRadius = screenWidth;
+
             mRecyclerView = (DebugRecyclerView) rootView.findViewById(R.id.recycler_view);
+            mRecyclerView.setRadius(circleRadius);
 
             // use this setting to improve performance if you know that changes
             // in content do not change the layout size of the RecyclerView
             mRecyclerView.setHasFixedSize(true);
 
-            // use a linear layout manager
 
-            int screenWidth = getActivity().getResources().getDisplayMetrics().widthPixels;
-
-            mLondonEyeLayoutManager = new LondonEyeLayoutManager(getActivity(), screenWidth, mRecyclerView);
+            mLondonEyeLayoutManager = new LondonEyeLayoutManager(getActivity(), circleRadius, mRecyclerView);
             mRecyclerView.setLayoutManager(mLondonEyeLayoutManager);//new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
 
             mVideoRecyclerViewAdapter = new LondonEyeListAdapter(getActivity(), mList);
 
             mRecyclerView.setAdapter(mVideoRecyclerViewAdapter);
-            mRecyclerView.setRadius(screenWidth/2);
 
             return rootView;
         }

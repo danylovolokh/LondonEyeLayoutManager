@@ -103,8 +103,8 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
     private int mOriginY;
     private int mOriginX;
 
-    public LondonEyeLayoutManager(FragmentActivity activity, int screenWidthPixels, RecyclerView recyclerView) {
-        mRadius = screenWidthPixels / 2;
+    public LondonEyeLayoutManager(FragmentActivity activity, int radius, RecyclerView recyclerView) {
+        mRadius = radius;
 
         mUnitCircleHelper = new UnitCircleFourthQuadrantHelper(
                 mRadius);
@@ -189,32 +189,35 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
             Log.v(TAG, "onLayoutChildren, mFirstVisiblePosition " + mFirstVisiblePosition);        }
 
 
-        ViewCoordinates previousViewCoordinates = new ViewCoordinates(0, 0, 0);
+        ViewData viewData = new ViewData(0, 0, 0, 0);
 
-        boolean nextViewIsVisible;
+        // when this variable will be false it mean that we have layout-ed a view outside of the RecyclerView.
+        // It will be our stop flag
+        boolean isLayoutedViewVisible;
 
-        int index = 5;
         do{
             View view = recycler.getViewForPosition(mFirstVisiblePosition);
             addView(view);
-            mLayouter.layoutIn_1st_4th_3rd_Quadrant(view, previousViewCoordinates);
+            mLayouter.layoutIn_1st_4th_3rd_Quadrant(view, viewData);
 
             boolean isViewFullyVisible = isViewFullyVisible(view);
             if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, isViewFullyVisible " + isViewFullyVisible);
 
             // We update coordinates instead of creating new object to keep the heap clean
-            previousViewCoordinates.updateCoordinates(view);
-            if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, previousViewCoordinates " + previousViewCoordinates);
+            viewData.updateData(view);
+            if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, viewData " + viewData);
 
+            isLayoutedViewVisible = viewData.isViewVisible();
             mFirstVisiblePosition++;
-            index--;
-        } while (index >0); // TODO: use nextViewIsVisible to
+
+        } while (isLayoutedViewVisible); // TODO: use nextViewIsVisible to
 
     }
 
     private boolean isViewFullyVisible(View view) {
         Rect visibleRect = new Rect();
-        view.getLocalVisibleRect(visibleRect);
+        boolean isVisible = view.getLocalVisibleRect(visibleRect);
+        if(SHOW_LOGS) Log.v(TAG, "isViewFullyVisible isVisible " + isVisible);
         if(SHOW_LOGS) Log.v(TAG, "isViewFullyVisible visibleRect " + visibleRect);
 
         return view.getLocalVisibleRect(visibleRect);
