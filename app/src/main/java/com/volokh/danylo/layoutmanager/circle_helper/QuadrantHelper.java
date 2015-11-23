@@ -4,9 +4,12 @@ import android.util.Log;
 
 import com.volokh.danylo.Config;
 import com.volokh.danylo.layoutmanager.Point;
+import com.volokh.danylo.layoutmanager.ViewData;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by danylo.volokh on 11/17/2015.
@@ -16,7 +19,28 @@ public class QuadrantHelper {
     private static final boolean SHOW_LOGS = Config.SHOW_LOGS;
     private static final String TAG = QuadrantHelper.class.getSimpleName();
 
-    private final ArrayList<Point> m_1st_4th_3rd_QuadrantCircumference; // order of quadrants does matter
+    /**
+     * We use an "xy" coordinate as a key. It will improve performance of getting view coordinates.
+     * Example:
+     *  Point (1; 1). Key= "11";
+     *  Point (0; 11). Key= "011";
+     *  Point (-1234; 43). Key= "-123443";
+     *  Point (-1; -57). Key= "-1-57";
+     *
+     *  This way we can have a unique identifier for a Point
+     */
+    private final Map<String, Point> m_1st_4th_3rd_QuadrantCircularSectorsMap;
+
+    /**
+     * Getting key by index is O(1)
+     * We could use map for it for consistency with {@link #mKeysIndexes} but we use list for better performance
+     */
+    private final List<String> mIndexesKeys;
+
+    /**
+     * Getting index by key is almost O(1)
+     */
+    private final Map<String, Integer> mKeysIndexes;
 
     private final int mRadius;
 
@@ -29,83 +53,26 @@ public class QuadrantHelper {
 
         mRadius = radius;
 
-        m_1st_4th_3rd_QuadrantCircumference = new ArrayList<>(radius * 3/*three quadrants*/);
-        fill_1st_4th_3rd_QuadrantCircumference();
-    }
+        m_1st_4th_3rd_QuadrantCircularSectorsMap = new HashMap<>();
 
-    private void fill_1st_4th_3rd_QuadrantCircumference() {
-        fillFirstQuadrantCircumference(mRadius, m_1st_4th_3rd_QuadrantCircumference);
-        // TODO: + (Radius; 0) ??
-        fillFourthQuadrantCircumference(mRadius, m_1st_4th_3rd_QuadrantCircumference);
-        // TODO: + (0; Radius) ??
-        fillThirdQuadrantCircumference(mRadius, m_1st_4th_3rd_QuadrantCircumference);
-        // TODO: + (-Radius; 0) ??
-    }
-
-    /**
-     *      |
-     *      |         x
-     *------|---------->
-     *      |           The formula is R^2 = x^2 + y^2
-     *      |           We are calculating a circle points.
-     *      |           Start and y=1 and increment y up to "radius"
-     *    y V
-     */
-    private static void fillFourthQuadrantCircumference(int radius, List<Point> circumference) {
-        if(SHOW_LOGS) Log.v(TAG, ">> fillFourthQuadrantCircumference, size " + circumference.size());
+        mIndexesKeys = new ArrayList<>(radius * 3/*three quadrants*/);
+        mKeysIndexes = new HashMap<>();
 
         /**
-         * Basically in fourth quadrant y is negative. But devices display "thinks" differently so y is positive
+         * The order does matter!
+         * Indexes of array depends on this order.
+         * Probably it won't matter if {@link #mIndexesKeys} was a Map :)
          */
-        for(int y = 1; y <= radius; y++){
-            if(SHOW_LOGS) Log.v(TAG, "fillFourthQuadrantCircumference, y " + y);
+        if(SHOW_LOGS) Log.v(TAG, ">> constructor, start filling sector points");
+        SectorPointCreator.fillFirstQuadrantWithSectorPoints(mRadius, m_1st_4th_3rd_QuadrantCircularSectorsMap, mIndexesKeys, mKeysIndexes);
+        SectorPointCreator.fillFourthQuadrantWithSectorPoints(mRadius, m_1st_4th_3rd_QuadrantCircularSectorsMap, mIndexesKeys, mKeysIndexes);
+        SectorPointCreator.fillThirdQuadrantWithSectorPoints(mRadius, m_1st_4th_3rd_QuadrantCircularSectorsMap, mIndexesKeys, mKeysIndexes);
 
-            int x = (int) Math.sqrt(Math.pow(radius, 2) - Math.pow(y, 2)); // r^2 = x^2 + y^2
+        if(SHOW_LOGS) Log.v(TAG, "<< constructor, finished filling sector points");
 
-            if(SHOW_LOGS) Log.v(TAG, "fillFourthQuadrantCircumference, x " + x);
-            circumference.add(new Point(x, y));
-        }
-        if(SHOW_LOGS) Log.v(TAG, "<< fillFourthQuadrantCircumference");
+
     }
 
-    private static void fillThirdQuadrantCircumference(int radius, List<Point> circumference) {
-        if(SHOW_LOGS) Log.v(TAG, ">> fillThirdQuadrantCircumference, size " + circumference.size());
-        for(int y = radius; y > 0; y--){
-            if(SHOW_LOGS) Log.v(TAG, "fillThirdQuadrantCircumference, y " + y);
-
-            int x = (int) Math.sqrt(Math.pow(radius, 2) - Math.pow(y, 2)); // r^2 = x^2 + y^2
-
-            x = -x; // x is negative in third quadrant
-            if(SHOW_LOGS) Log.v(TAG, "fillThirdQuadrantCircumference, x " + x);
-            circumference.add(new Point(x, y));
-        }
-        if(SHOW_LOGS) Log.v(TAG, "<< fillThirdQuadrantCircumference");
-    }
-
-    /**
-     *   -y |          The formula is R^2 = x^2 + y^2
-     *      |          We are calculating a circle points.
-     *      |______    Start at y=-radius and increment y up to "0"
-     *      |      --_
-     *      |         \_      x
-     *      |           |
-     *------|--------------->
-     *      |
-     *      |
-     *      |
-     *   +y V
-     */
-    private static void fillFirstQuadrantCircumference(int radius, List<Point> circumference) {
-        if(SHOW_LOGS) Log.v(TAG, ">> fillFirstQuadrantCircumference, size " + circumference.size());
-        for(int y = -radius; y < 0; y++){
-            if(SHOW_LOGS) Log.v(TAG, "fillFirstQuadrantCircumference, y " + y);
-
-            int x = (int) Math.sqrt(Math.pow(radius, 2) - Math.pow(y, 2)); // r^2 = x^2 + y^2
-            if(SHOW_LOGS) Log.v(TAG, "fillFirstQuadrantCircumference, x " + x);
-            circumference.add(new Point(x, y));
-        }
-        if(SHOW_LOGS) Log.v(TAG, "<< fillFirstQuadrantCircumference");
-    }
 
 
     /**
@@ -133,46 +100,148 @@ public class QuadrantHelper {
      *                                    |__________________|_______
      */
 
-    public int findViewCenterY(int previousViewBottomY, int halfViewHeight, int viewTop) {
-        if(SHOW_LOGS) Log.v(TAG, ">> findViewCenterY, previousViewBottomY " + previousViewBottomY);
-        if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, viewTop " + viewTop);
+//    public int findViewCenterY(int previousViewBottomY, int halfViewHeight, int viewTop) {
+//        if(SHOW_LOGS) Log.v(TAG, ">> findViewCenterY, previousViewBottomY " + previousViewBottomY);
+//        if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, viewTop " + viewTop);
+//
+//        // When we calculate this value for the first time, "view top" is higher than previousViewBottom because it is "container top" and == 0
+//        int viewCenterY = previousViewBottomY;
+//
+//        boolean viewTopIsHigherThenPreviousViewBottom = isViewTopHigherThenPreviousViewBottom(previousViewBottomY, viewTop);
+//        if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, initial viewTopIsHigherThenPreviousViewBottom " + viewTopIsHigherThenPreviousViewBottom);
+//        boolean isViewCenterYOnTheCircle;
+//        do {
+//
+//            viewCenterY++;
+//
+//            if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, new viewCenterY " + viewCenterY);
+//
+//            isViewCenterYOnTheCircle = isViewCenterYOnTheFourthQuadrantCircle(viewCenterY);
+//            if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, isViewCenterYOnTheCircle " + isViewCenterYOnTheCircle);
+//
+//            if(isViewCenterYOnTheCircle){
+//                viewTop = viewCenterY - halfViewHeight;
+//                if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, viewTop " + viewTop);
+//
+//                viewTopIsHigherThenPreviousViewBottom = isViewTopHigherThenPreviousViewBottom(previousViewBottomY, viewTop);// && angleDegree < 360 - ANGLE_DELTA /*360 degrees*/;
+//                if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, viewTopIsNotAtTheContainerTop " + viewTopIsHigherThenPreviousViewBottom);
+//
+//                if(!viewTopIsHigherThenPreviousViewBottom){
+//                    if(SHOW_LOGS) Log.i(TAG, "findViewCenterY, viewCenterY " + viewCenterY);
+//                }
+//            } else {
+//                if(SHOW_LOGS) {
+//                    Log.v(TAG, "findViewCenterY, view center Y is no longer on the circle");
+//                    Log.w(TAG, "findViewCenterY, this view should not be placed below previous view. Return -1");
+//                }
+//                viewCenterY = -1;
+//            }
+//
+//        } while (viewTopIsHigherThenPreviousViewBottom && isViewCenterYOnTheCircle);
+//
+//        return viewCenterY;
+//    }
 
-        // When we calculate this value for the first time, "view top" is higher than previousViewBottom because it is "container top" and == 0
-        int viewCenterY = previousViewBottomY;
 
-        boolean viewTopIsHigherThenPreviousViewBottom = isViewTopHigherThenPreviousViewBottom(previousViewBottomY, viewTop);
-        if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, initial viewTopIsHigherThenPreviousViewBottom " + viewTopIsHigherThenPreviousViewBottom);
-        boolean isViewCenterYOnTheCircle;
+    /**
+     * This method looks for a next point clockwise. 1st, 4th, 3rd, 2nd quadrants in that order.
+     * It changes "y" coordinate like we were going through these quadrants.
+     * In 1st and 4th quadrants "y" increases. In 3rd and 2nd in decreases. (Clockwise)
+     *
+     *     ^ We end here          -->  --> We start here
+     *    /             -y |                    \
+     *   /                 |           1st       \
+     *               ______|______                V
+     *   ^        _--      |      --_
+     *   |     _/          |         \_      x    |
+     *   |    |            |           |          |
+     *        -------------|--------------->      V
+     *   ^    |_           |          _|
+     *   |      \_         |        _/            /
+     *   |        --_______|______--             /
+     *      3rd            |            4nd     V
+     *   ^                 |
+     *    \   <--       +y V              <---
+     *     \
+     */
+    public Point findNextViewCenter(ViewData previousViewData, int nextViewHalfViewWidth, int nextViewHalfViewHeight) {
+        if(SHOW_LOGS) Log.v(TAG, ">> findViewCenter, previousViewData " + previousViewData);
+        if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewHalfViewHeight " + nextViewHalfViewHeight);
+        if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewHalfViewWidth " + nextViewHalfViewWidth);
+
+        // We start from previous view bottom. TODO: can be optimized if mHasFixedSize = true;
+//        int viewCenterY = previousViewCenter.y + previousViewHalfViewHeight;
+        Point previousViewCenter = previousViewData.getCenterPoint();
+        if(SHOW_LOGS) Log.v(TAG, "findViewCenter, previousViewCenter " + previousViewCenter);
+
+
+        Point nextViewCenter;
+
+        boolean foundNextViewCenter;
         do {
 
-            viewCenterY++;
+            nextViewCenter = getNextViewCenter(previousViewCenter);
+            if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewCenter " + nextViewCenter);
 
-            if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, new viewCenterY " + viewCenterY);
+            int nextViewTop = nextViewCenter.y - nextViewHalfViewHeight;
+            if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewTop " + nextViewTop);
 
-            isViewCenterYOnTheCircle = isViewCenterYOnTheFourthQuadrantCircle(viewCenterY);
-            if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, isViewCenterYOnTheCircle " + isViewCenterYOnTheCircle);
+            boolean nextViewTopIsBelowPreviousViewBottom = nextViewTop > previousViewData.getViewBottom();
+            if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewTopIsBelowPreviousViewBottom " + nextViewTopIsBelowPreviousViewBottom);
 
-            if(isViewCenterYOnTheCircle){
-                viewTop = viewCenterY - halfViewHeight;
-                if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, viewTop " + viewTop);
+            int nextViewRight = nextViewCenter.x + nextViewHalfViewWidth;
+            if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewRight " + nextViewRight);
 
-                viewTopIsHigherThenPreviousViewBottom = isViewTopHigherThenPreviousViewBottom(previousViewBottomY, viewTop);// && angleDegree < 360 - ANGLE_DELTA /*360 degrees*/;
-                if(SHOW_LOGS) Log.v(TAG, "findViewCenterY, viewTopIsNotAtTheContainerTop " + viewTopIsHigherThenPreviousViewBottom);
+            boolean nextViewIsToTheLeftOfThePreviousView = nextViewRight < previousViewData.getViewLeft();
+            if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewTopIsBelowPreviousViewBottom " + nextViewTopIsBelowPreviousViewBottom);
 
-                if(!viewTopIsHigherThenPreviousViewBottom){
-                    if(SHOW_LOGS) Log.i(TAG, "findViewCenterY, viewCenterY " + viewCenterY);
-                }
-            } else {
-                if(SHOW_LOGS) {
-                    Log.v(TAG, "findViewCenterY, view center Y is no longer on the circle");
-                    Log.w(TAG, "findViewCenterY, this view should not be placed below previous view. Return -1");
-                }
-                viewCenterY = -1;
-            }
+            foundNextViewCenter = nextViewTopIsBelowPreviousViewBottom || nextViewIsToTheLeftOfThePreviousView;
+            if(SHOW_LOGS) Log.v(TAG, "findViewCenter, foundNextViewCenter " + foundNextViewCenter);
 
-        } while (viewTopIsHigherThenPreviousViewBottom && isViewCenterYOnTheCircle);
+            // "next view center" become previous
+            previousViewCenter = nextViewCenter;
+        } while (!foundNextViewCenter);
 
-        return viewCenterY;
+        if(SHOW_LOGS) Log.v(TAG, "<< findViewCenter, foundNextViewCenter " + foundNextViewCenter);
+        return nextViewCenter;
+    }
+
+    public Point getPointByKey(String key) {
+        if(SHOW_LOGS) Log.v(TAG, "getPointByKey, key [" + key + "]");
+        return m_1st_4th_3rd_QuadrantCircularSectorsMap.get(key);
+    }
+
+    /**
+     * We start from previous view center point.
+     * Here is the flow :
+     * 1. We get a key from (x; y)
+     * 2. We get an index of this Key in the map of Key-Index {@link #mKeysIndexes}
+     * 3. We increment the index.
+     * 4. We get a key for incremented index from the list {@link #mIndexesKeys}
+     *    New key for incremented list indicates a key of next point on the circle
+     * 5. We get this point from the map of Key-Point {@link #m_1st_4th_3rd_QuadrantCircularSectorsMap}
+     * 6. We check if new view will be next to the previous if we put it to the point retrieved in 5th paragraph of this list.
+     *
+     */
+    private Point getNextViewCenter(Point previousViewCenter) {
+        /** 1. */
+        String previousViewCenterPointKey = SectorPointCreator.getSectorKey(previousViewCenter.x, previousViewCenter.y);
+        if(SHOW_LOGS) Log.v(TAG, "findViewCenter, previousViewCenterPointKey " + previousViewCenterPointKey);
+
+        /** 2. */
+        int previousViewCenterPointIndex = mKeysIndexes.get(previousViewCenterPointKey);
+        if(SHOW_LOGS) Log.v(TAG, "findViewCenter, previousViewCenterPointIndex " + previousViewCenterPointIndex);
+
+        /** 3. */
+        int nextViewCenterCenterPointIndex = previousViewCenterPointIndex + 1;
+        if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewCenterCenterPointIndex " + nextViewCenterCenterPointIndex);
+
+        /** 4. */
+        String nextViewCenterPointKey = mIndexesKeys.get(nextViewCenterCenterPointIndex);
+        if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewCenterPointKey " + nextViewCenterPointKey);
+
+        /** 5. */
+        return m_1st_4th_3rd_QuadrantCircularSectorsMap.get(nextViewCenterPointKey);
     }
 
 
@@ -206,19 +275,19 @@ public class QuadrantHelper {
      *
      */
 
-    private boolean isViewCenterYOnTheFourthQuadrantCircle(int viewCenterY) {
-        if(SHOW_LOGS) Log.v(TAG, "isViewCenterYOnTheFourthQuadrantCircle, viewCenterY " + viewCenterY);
-
-        int numberOfPointsIn_3rdQuadrant = mRadius;
-        Point lastPointInFourthQuadrant = m_1st_4th_3rd_QuadrantCircumference.get(
-                m_1st_4th_3rd_QuadrantCircumference.size() - numberOfPointsIn_3rdQuadrant);
-        if(SHOW_LOGS) Log.v(TAG, "isViewCenterYOnTheFourthQuadrantCircle, lastPointInFourthQuadrant " + lastPointInFourthQuadrant);
-
-        boolean isViewCenterYOnTheCircle = lastPointInFourthQuadrant.y >= viewCenterY;
-        if(SHOW_LOGS) Log.v(TAG, "isViewCenterYOnTheFourthQuadrantCircle " + isViewCenterYOnTheCircle);
-
-        return isViewCenterYOnTheCircle;
-    }
+//    private boolean isViewCenterYOnTheFourthQuadrantCircle(int viewCenterY) {
+//        if(SHOW_LOGS) Log.v(TAG, "isViewCenterYOnTheFourthQuadrantCircle, viewCenterY " + viewCenterY);
+//
+//        int numberOfPointsIn_3rdQuadrant = mRadius;
+//        Point lastPointInFourthQuadrant = m_1st_4th_3rd_QuadrantCircumference.get(
+//                m_1st_4th_3rd_QuadrantCircumference.size() - numberOfPointsIn_3rdQuadrant);
+//        if(SHOW_LOGS) Log.v(TAG, "isViewCenterYOnTheFourthQuadrantCircle, lastPointInFourthQuadrant " + lastPointInFourthQuadrant);
+//
+//        boolean isViewCenterYOnTheCircle = lastPointInFourthQuadrant.y >= viewCenterY;
+//        if(SHOW_LOGS) Log.v(TAG, "isViewCenterYOnTheFourthQuadrantCircle " + isViewCenterYOnTheCircle);
+//
+//        return isViewCenterYOnTheCircle;
+//    }
 
     /**
      * View top is higher when it's smaller then previous View Bottom
@@ -227,23 +296,24 @@ public class QuadrantHelper {
         return viewTop < previousViewBottom;
     }
 
-    public int getXFromYInFourthQuadrant(int y) {
-        if(SHOW_LOGS) Log.v(TAG, ">> getXFromYInFourthQuadrant, y " + y);
-
-        int x = m_1st_4th_3rd_QuadrantCircumference.get(0).x;
-        for(int index = 1; index < m_1st_4th_3rd_QuadrantCircumference.size(); index++){
-            Point point = m_1st_4th_3rd_QuadrantCircumference.get(index);
-            if(SHOW_LOGS) Log.v(TAG, "getXFromYInFourthQuadrant, point " + point);
-
-            if(point.y == y){
-                x = point.x;
-                mStartPoint = point;
-                break;
-            }
-        }
-        if(SHOW_LOGS) Log.v(TAG, "<< getXFromYInFourthQuadrant, x " + x + ", new mStartPoint " + mStartPoint);
-        return x;
-    }
+//    public int getXFromYInFourthQuadrant(int y) {
+//        if(SHOW_LOGS) Log.v(TAG, ">> getXFromYInFourthQuadrant, y " + y);
+//
+//        int x = m_1st_4th_3rd_QuadrantCircumference.get(0).x;
+//        for(int index = 1; index < m_1st_4th_3rd_QuadrantCircumference.size(); index++){
+//            Point point = m_1st_4th_3rd_QuadrantCircumference.get(index);
+//
+////            if(SHOW_LOGS) Log.v(TAG, "getXFromYInFourthQuadrant, point " + point);
+//
+//            if(point.y == y){
+//                x = point.x;
+//                mStartPoint = point;
+//                break;
+//            }
+//        }
+//        if(SHOW_LOGS) Log.v(TAG, "<< getXFromYInFourthQuadrant, x " + x + ", new mStartPoint " + mStartPoint);
+//        return x;
+//    }
 
     public Point getStartPoint() {
         return mStartPoint;

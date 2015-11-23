@@ -24,21 +24,24 @@ public class ViewData {
     private int mViewRight;
 
     private boolean mIsViewVisible;
+    private Point mViewCenter;
 
-    public ViewData(int viewTop, int viewBottom, int viewLeft, int viewRight) {
+    public ViewData(int viewTop, int viewBottom, int viewLeft, int viewRight, Point viewCenter) {
         mViewTop = viewTop;
         mViewBottom = viewBottom;
         mViewLeft = viewLeft;
         mViewRight = viewRight;
+        mViewCenter = viewCenter;
     }
 
-    public void updateData(View view) {
+    public void updateData(View view, Point viewCenter) {
         mIsViewVisible = view.getLocalVisibleRect(mViewRect);
 
         mViewTop = view.getTop();
         mViewBottom = view.getBottom();
         mViewLeft = view.getLeft();
         mViewRight = view.getRight();
+        mViewCenter = viewCenter;
     }
 
     @Override
@@ -53,12 +56,20 @@ public class ViewData {
                 '}';
     }
 
-    public int getPreviousViewBottom() {
+    public int getViewBottom() {
         return mViewBottom;
+    }
+
+    public int getViewLeft() {
+        return mViewLeft;
     }
 
     public boolean isViewVisible() {
         if(SHOW_LOGS) Log.v(TAG, "isViewVisible " + mIsViewVisible);
         return mIsViewVisible;
+    }
+
+    public Point getCenterPoint() {
+        return mViewCenter;
     }
 }

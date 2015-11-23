@@ -12,5 +12,5 @@ public interface LayouterCallback {
 
     void layoutDecorated(View view, int left, int top, int right, int bottom);
 
-    Pair<Integer, Integer> getWidthHeightPair(View view);
+    Pair<Integer,Integer> getHalfWidthHeightPair(View view);
 }

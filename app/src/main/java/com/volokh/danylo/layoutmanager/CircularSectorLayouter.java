@@ -6,15 +6,16 @@ import android.view.View;
 
 import com.volokh.danylo.Config;
 import com.volokh.danylo.layoutmanager.circle_helper.QuadrantHelper;
+import com.volokh.danylo.layoutmanager.circle_helper.SectorPointCreator;
 
 /**
  * Created by danylo.volokh on 11/17/2015.
  * This is a helper that performs layouting and knows everything about how to layout views
  */
-public class CircumferenceLayouter {
+public class CircularSectorLayouter {
 
     private static final boolean SHOW_LOGS = Config.SHOW_LOGS;
-    private static final String TAG = CircumferenceLayouter.class.getSimpleName();
+    private static final String TAG = CircularSectorLayouter.class.getSimpleName();
 
     private final LayouterCallback mCallback;
 
@@ -26,7 +27,7 @@ public class CircumferenceLayouter {
         mQuadrantHelper.reset();
     }
 
-    public CircumferenceLayouter(LayouterCallback callback, int radius){
+    public CircularSectorLayouter(LayouterCallback callback, int radius){
         mCallback = callback;
         mRadius = radius;
         mQuadrantHelper = new QuadrantHelper(mRadius);
@@ -81,66 +82,64 @@ public class CircumferenceLayouter {
      * TODO : If we don't find a suitable point below we try to find it to the left of previous view left
      *
      */
-    public void layoutIn_1st_4th_3rd_Quadrant(View view, ViewData previousViewCoordinates) {
-        if (SHOW_LOGS)
-            Log.v(TAG, ">> layoutIn_1st_4th_3rd_Quadrant, previousViewCoordinates " + previousViewCoordinates);
+    public ViewData layoutIn_1st_4th_3rd_Quadrant(View view, ViewData previousViewData) {
+        if (SHOW_LOGS)Log.v(TAG, ">> layoutIn_1st_4th_3rd_Quadrant, previousViewData " + previousViewData);
 
-        Pair<Integer, Integer> widthHeight = mCallback.getWidthHeightPair(view);
-
-        int decoratedCapsuleWidth = widthHeight.first;
-        int decoratedCapsuleHeight = widthHeight.second;
-
-        if (SHOW_LOGS)
-            Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, decoratedCapsuleWidth " + decoratedCapsuleWidth);
-        if (SHOW_LOGS)
-            Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, decoratedCapsuleHeight " + decoratedCapsuleHeight);
-
-        int viewCenterY = previousViewCoordinates.getPreviousViewBottom();
-        if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, initial viewCenterY " + viewCenterY);
-
-        int halfViewHeight = decoratedCapsuleHeight / 2;
-        if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, halfViewHeight " + halfViewHeight);
-
-        // viewTop is higher than viewCenterY. And "higher" is up. That's why we subtract halfViewHeight;
-        int viewTop = viewCenterY - halfViewHeight;
-
-        if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, initial viewTop " + viewTop);
-
-        viewCenterY = mQuadrantHelper.findViewCenterY(
-                previousViewCoordinates.getPreviousViewBottom(),
-                halfViewHeight,
-                viewTop
-        );
-        if (SHOW_LOGS) Log.i(TAG, "layoutIn_1st_4th_3rd_Quadrant, viewCenterY " + viewCenterY);
-
-        if(viewCenterY != -1){
-            if (SHOW_LOGS) Log.i(TAG, "layoutIn_1st_4th_3rd_Quadrant, final viewCenterY " + viewCenterY);
-
-            int left, top, right, bottom;
-
-            top = viewCenterY - halfViewHeight;
-            bottom = viewCenterY + halfViewHeight;
-
-            int halfViewWidth = decoratedCapsuleWidth / 2;
-            if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, halfViewWidth " + halfViewWidth);
-
-            int viewCenterX = mQuadrantHelper.getXFromYInFourthQuadrant(viewCenterY);
-            if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, viewCenterX " + viewCenterX);
-
-            left = viewCenterX - halfViewWidth;
-            right = viewCenterX + halfViewWidth;
-
-            if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, left " + left);
-            if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, top " + top);
-            if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, right " + right);
-            if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, bottom " + bottom);
-
-            mCallback.layoutDecorated(view, left, top, right, bottom);
-        } else {
-            // TODO: try to find View center X and then Y
+        if(previousViewData == null){
+            previousViewData = new ViewData(0, 0, 0, 0,
+                    mQuadrantHelper.getPointByKey(
+                            SectorPointCreator.getSectorKey(mRadius, 0)
+                    )
+            );
         }
+        Pair<Integer, Integer> halfWidthHeight = mCallback.getHalfWidthHeightPair(view);
 
+        Point viewCenter = mQuadrantHelper.findNextViewCenter(previousViewData, halfWidthHeight.first, halfWidthHeight.second);
+        if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, viewCenter " + viewCenter);
 
-        if (SHOW_LOGS) Log.v(TAG, "<< layoutInFourthQuadrant");
+        performLayout(view, viewCenter, halfWidthHeight.first, halfWidthHeight.second);
+        if (SHOW_LOGS) Log.v(TAG, "<< layoutIn_1st_4th_3rd_Quadrant");
+        previousViewData.updateData(view, viewCenter);
+
+        return previousViewData;
+    }
+
+    private void performLayout(View view, Point viewCenter, int halfViewWidth, int halfViewHeight) {
+        if (SHOW_LOGS) Log.i(TAG, "layoutIn_1st_4th_3rd_Quadrant, final viewCenter " + viewCenter);
+
+        int left, top, right, bottom;
+
+        top = viewCenter.y - halfViewHeight;
+        bottom = viewCenter.y + halfViewHeight;
+
+        left = viewCenter.x - halfViewWidth;
+        right = viewCenter.x + halfViewWidth;
+
+        if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, left " + left);
+        if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, top " + top);
+        if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, right " + right);
+        if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, bottom " + bottom);
+
+        mCallback.layoutDecorated(view, left, top, right, bottom);
+    }
+
+    public void scrollVerticallyBy(View view, int dy) {
+//        if (SHOW_LOGS) Log.v(TAG, ">> scrollVerticallyBy, dy " + dy);
+//
+//        int previousViewCenterY = (view.getTop() - view.getHeight()/2 );
+//        int previousViewCenterX = mQuadrantHelper.getXFromYInFourthQuadrant(previousViewCenterY);
+//
+//        int newCenterY = previousViewCenterY + dy;
+//        int newCenterX = mQuadrantHelper.getXFromYInFourthQuadrant(newCenterY);
+//
+//        int dx = newCenterX - previousViewCenterX;
+//
+//        if (SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy, viewCenterY " + viewCenterY);
+//
+//        Pair<Integer, Integer> halfWidthHeight = mCallback.getHalfWidthHeightPair(view);
+//        view.offsetTopAndBottom(dy);
+//        view.offsetLeftAndRight(dx);
+//        performLayoutByY(view, newCenterY, halfWidthHeight.first, halfWidthHeight.second);
+
     }
 }

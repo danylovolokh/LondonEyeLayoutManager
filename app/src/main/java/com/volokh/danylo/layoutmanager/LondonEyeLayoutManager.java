@@ -24,7 +24,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
     private final RecyclerView mRecyclerView;
 
-    private final CircumferenceLayouter mLayouter;
+    private final CircularSectorLayouter mLayouter;
 
     /**
      * If this is set to "true" we will calculate size of capsules only once.
@@ -49,17 +49,20 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
     }
 
     @Override
-    public Pair<Integer, Integer> getWidthHeightPair(View view) {
+    public Pair<Integer, Integer> getHalfWidthHeightPair(View view) {
+
         Pair<Integer, Integer> widthHeight;
         if (mHasFixedSizeCapsules) {
             // this is an optimization
-            if (mDecoratedCapsuleWidth == 0 || mDecoratedCapsuleHeight == 0) {
-                throw new RuntimeException("mDecoratedCapsuleWidth " + mDecoratedCapsuleWidth + ", mDecoratedCapsuleHeight " + mDecoratedCapsuleHeight + ", values should be calculated earlier");
+            if (mHalfDecoratedCapsuleWidth == 0 || mHalfDecoratedCapsuleHeight == 0) {
+                throw new RuntimeException("mHalfDecoratedCapsuleWidth " + mHalfDecoratedCapsuleWidth + ", mHalfDecoratedCapsuleHeight " + mHalfDecoratedCapsuleHeight + ", values should be calculated earlier");
             }
             widthHeight = new Pair<>(
-                    mDecoratedCapsuleWidth,
-                    mDecoratedCapsuleHeight
+                    mHalfDecoratedCapsuleWidth,
+                    mHalfDecoratedCapsuleHeight
             );
+            if(SHOW_LOGS) Log.i(TAG, "getHalfWidthHeightPair, mHalfDecoratedCapsuleWidth " + mHalfDecoratedCapsuleWidth + ", mHalfDecoratedCapsuleHeight " + mHalfDecoratedCapsuleHeight);
+
         } else {
             measureChildWithMargins(view, 0, 0);
 
@@ -68,7 +71,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
             int diameter = mRadius*2;
 
-            if(SHOW_LOGS) Log.i(TAG, "getWidthHeightPair, measuredWidth " + measuredWidth + ", measuredHeight " + measuredHeight);
+            if(SHOW_LOGS) Log.i(TAG, "getHalfWidthHeightPair, measuredWidth " + measuredWidth + ", measuredHeight " + measuredHeight);
 
             if(measuredWidth > diameter || measuredHeight > diameter){
                 throw new RuntimeException("View size is bigger than diameter. " +
@@ -77,9 +80,15 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
                         "\n, measuredWidth " + measuredWidth + ", measuredHeight " + measuredHeight + ", diameter " + diameter);
             }
 
+            int halfViewHeight = measuredHeight / 2;
+            if (SHOW_LOGS) Log.v(TAG, "getHalfWidthHeightPair, halfViewHeight " + halfViewHeight);
+
+            int halfViewWidth = measuredWidth / 2;
+            if (SHOW_LOGS) Log.v(TAG, "getHalfWidthHeightPair, halfViewWidth " + halfViewWidth);
+
             widthHeight = new Pair<>(
-                    measuredWidth,
-                    measuredHeight
+                    halfViewWidth,
+                    halfViewHeight
             );
         }
         return widthHeight;
@@ -93,10 +102,10 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
     private final int mRadius;
 
-    private int mDecoratedCapsuleWidth;
-    private int mDecoratedCapsuleHeight;
+    private int mHalfDecoratedCapsuleWidth;
+    private int mHalfDecoratedCapsuleHeight;
 
-    private int mFirstVisiblePosition; //TODO: restore state
+    private int mLastVisiblePosition; //TODO: restore state
 
     private int mCurrentViewPosition;
 
@@ -112,10 +121,11 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
         mRecyclerView = recyclerView;
 
         requestLayout();
-        mLayouter = new CircumferenceLayouter(this, mRadius);
+        mLayouter = new CircularSectorLayouter(this, mRadius);
     }
 
     public void setHasFixedSizeCapsules(boolean hasFixedSizeCapsules){
+        // TODO: find a usage for this?
         mHasFixedSizeCapsules = hasFixedSizeCapsules;
     }
 
@@ -138,14 +148,17 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
     @Override
     public int scrollVerticallyBy(int dy, RecyclerView.Recycler recycler, RecyclerView.State state) {
-        if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy dy " + dy);
-        int childCount = getChildCount();
-        if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy childCount " + childCount);
-
-        if (childCount == 0) {
-            return 0;
-        }
-
+//        if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy dy " + dy);
+//        int childCount = getChildCount();
+//        if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy childCount " + childCount);
+//
+//        if (childCount == 0) {
+//            return 0;
+//        }
+//        for(int indexOfView = 0; indexOfView < childCount; indexOfView++){
+//            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy indexOfView " + indexOfView);
+//            mLayouter.scrollVerticallyBy(getChildAt(indexOfView), dy);
+//        }
 //        int previousViewBottom = 0;
 //        mFourthQuadrantLastAngle.set(360);
 //
@@ -156,7 +169,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 //            previousViewBottom = view.getBottom();
 //        }
 
-        return super.scrollVerticallyBy(dy, recycler, state);
+        return -dy;
     }
 
     @Override
@@ -173,11 +186,13 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
         removeAllViews();
 
         mLayouter.reset();
-        mFirstVisiblePosition = 0;
+        mLastVisiblePosition = 0;
 
         if(mHasFixedSizeCapsules){
             // perform an optimization. If mHasFixedSizeCapsules == true we will calculate a size of views only once
-            calculateCapsuleWidthHeight(recycler);
+            if(mHalfDecoratedCapsuleHeight == 0 && mHalfDecoratedCapsuleWidth == 0){
+                calculateCapsuleHalfWidthHeight(recycler);
+            }
         }
 
         mCurrentViewPosition = 0;
@@ -186,29 +201,30 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
             Log.v(TAG, "onLayoutChildren, state " + state);
             Log.v(TAG, "onLayoutChildren, mRadius " + mRadius);
             Log.v(TAG, "onLayoutChildren, mOriginY " + mOriginY);
-            Log.v(TAG, "onLayoutChildren, mFirstVisiblePosition " + mFirstVisiblePosition);        }
+            Log.v(TAG, "onLayoutChildren, mLastVisiblePosition " + mLastVisiblePosition);        }
 
 
-        ViewData viewData = new ViewData(0, 0, 0, 0);
+        ViewData viewData = null;
 
         // when this variable will be false it mean that we have layout-ed a view outside of the RecyclerView.
         // It will be our stop flag
         boolean isLayoutedViewVisible;
 
         do{
-            View view = recycler.getViewForPosition(mFirstVisiblePosition);
+            View view = recycler.getViewForPosition(mLastVisiblePosition);
             addView(view);
-            mLayouter.layoutIn_1st_4th_3rd_Quadrant(view, viewData);
+            viewData = mLayouter.layoutIn_1st_4th_3rd_Quadrant(view, viewData);
 
             boolean isViewFullyVisible = isViewFullyVisible(view);
             if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, isViewFullyVisible " + isViewFullyVisible);
 
             // We update coordinates instead of creating new object to keep the heap clean
-            viewData.updateData(view);
             if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, viewData " + viewData);
 
             isLayoutedViewVisible = viewData.isViewVisible();
-            mFirstVisiblePosition++;
+            if(isLayoutedViewVisible){
+                mLastVisiblePosition++;
+            }
 
         } while (isLayoutedViewVisible); // TODO: use nextViewIsVisible to
 
@@ -224,17 +240,17 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
     }
 
     // TODO: move it to layout-er
-    private void calculateCapsuleWidthHeight(RecyclerView.Recycler recycler) {
-        if(SHOW_LOGS) Log.v(TAG, ">> calculateCapsuleWidthHeight");
+    private void calculateCapsuleHalfWidthHeight(RecyclerView.Recycler recycler) {
+        if(SHOW_LOGS) Log.v(TAG, ">> calculateCapsuleHalfWidthHeight");
 
         //Scrap measure one child
         View recycledCapsule = recycler.getViewForPosition(0);
-        if(SHOW_LOGS) Log.v(TAG, "calculateCapsuleWidthHeight recycledCapsule " + recycledCapsule);
+        if(SHOW_LOGS) Log.v(TAG, "calculateCapsuleHalfWidthHeight recycledCapsule " + recycledCapsule);
 
         addView(recycledCapsule);
 
-        if(SHOW_LOGS) Log.v(TAG, "calculateCapsuleWidthHeight recycledCapsule.left " + recycledCapsule.getLeft());
-        if(SHOW_LOGS) Log.v(TAG, "calculateCapsuleWidthHeight recycledCapsule.right " + recycledCapsule.getRight());
+        if(SHOW_LOGS) Log.v(TAG, "calculateCapsuleHalfWidthHeight recycledCapsule.left " + recycledCapsule.getLeft());
+        if(SHOW_LOGS) Log.v(TAG, "calculateCapsuleHalfWidthHeight recycledCapsule.right " + recycledCapsule.getRight());
 
 
         measureChildWithMargins(recycledCapsule, 0, 0);
@@ -246,12 +262,12 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
          * won't change.
          */
 
-        mDecoratedCapsuleWidth = getDecoratedMeasuredWidth(recycledCapsule);
-        mDecoratedCapsuleHeight = getDecoratedMeasuredHeight(recycledCapsule);
+        mHalfDecoratedCapsuleWidth = getDecoratedMeasuredWidth(recycledCapsule) / 2;
+        mHalfDecoratedCapsuleHeight = getDecoratedMeasuredHeight(recycledCapsule) / 2;
 
         removeAndRecycleAllViews(recycler);
 
-        if(SHOW_LOGS) Log.v(TAG, "<< calculateCapsuleWidthHeight, mDecoratedCapsuleWidth " + mDecoratedCapsuleWidth + ", mDecoratedCapsuleHeight " + mDecoratedCapsuleHeight);
+        if(SHOW_LOGS) Log.v(TAG, "<< calculateCapsuleHalfWidthHeight, mHalfDecoratedCapsuleWidth " + mHalfDecoratedCapsuleWidth + ", mHalfDecoratedCapsuleHeight " + mHalfDecoratedCapsuleHeight);
     }
 
     /**
@@ -302,11 +318,11 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 //
 //        if(mHasFixedSizeCapsules){
 //            // this is an optimization
-//            if(mDecoratedCapsuleWidth == 0 || mDecoratedCapsuleHeight == 0){
-//                throw new RuntimeException("mDecoratedCapsuleWidth " + mDecoratedCapsuleWidth + ", mDecoratedCapsuleHeight " + mDecoratedCapsuleHeight + ", values should be calculated earlier");
+//            if(mHalfDecoratedCapsuleWidth == 0 || mHalfDecoratedCapsuleHeight == 0){
+//                throw new RuntimeException("mHalfDecoratedCapsuleWidth " + mHalfDecoratedCapsuleWidth + ", mHalfDecoratedCapsuleHeight " + mHalfDecoratedCapsuleHeight + ", values should be calculated earlier");
 //            }
-//            decoratedCapsuleWidth = mDecoratedCapsuleWidth;
-//            decoratedCapsuleHeight = mDecoratedCapsuleHeight;
+//            decoratedCapsuleWidth = mHalfDecoratedCapsuleWidth;
+//            decoratedCapsuleHeight = mHalfDecoratedCapsuleHeight;
 //        } else {
 //            measureChildWithMargins(view, 0, 0);
 //            decoratedCapsuleWidth = getDecoratedMeasuredWidth(view);
