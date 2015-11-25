@@ -1,5 +1,6 @@
 package com.volokh.danylo;
 
+import android.graphics.Canvas;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -57,7 +58,14 @@ public class MainActivity extends ActionBarActivity {
                 "Passenger Cabin 8",
                 "Passenger Cabin 9",
                 "Passenger Cabin 10",
-                "Passenger Cabin 11"));
+                "Passenger Cabin 11",
+                "Passenger Cabin 12",
+                "Passenger Cabin 13",
+                "Passenger Cabin 14",
+                "Passenger Cabin 15",
+                "Passenger Cabin 16",
+                "Passenger Cabin 17",
+                "Passenger Cabin 18"));
 
         private DebugRecyclerView mRecyclerView;
 

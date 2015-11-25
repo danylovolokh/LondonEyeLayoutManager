@@ -5,17 +5,17 @@ import android.util.Pair;
 import android.view.View;
 
 import com.volokh.danylo.Config;
+import com.volokh.danylo.layoutmanager.circle_helper.CirclePointsCreator;
 import com.volokh.danylo.layoutmanager.circle_helper.QuadrantHelper;
-import com.volokh.danylo.layoutmanager.circle_helper.SectorPointCreator;
 
 /**
  * Created by danylo.volokh on 11/17/2015.
  * This is a helper that performs layouting and knows everything about how to layout views
  */
-public class CircularSectorLayouter {
+public class Layouter {
 
     private static final boolean SHOW_LOGS = Config.SHOW_LOGS;
-    private static final String TAG = CircularSectorLayouter.class.getSimpleName();
+    private static final String TAG = Layouter.class.getSimpleName();
 
     private final LayouterCallback mCallback;
 
@@ -27,10 +27,10 @@ public class CircularSectorLayouter {
         mQuadrantHelper.reset();
     }
 
-    public CircularSectorLayouter(LayouterCallback callback, int radius){
+    public Layouter(LayouterCallback callback, int radius, int x0, int y0){
         mCallback = callback;
         mRadius = radius;
-        mQuadrantHelper = new QuadrantHelper(mRadius);
+        mQuadrantHelper = new QuadrantHelper(mRadius, x0, y0);
     }
 
     /**
@@ -88,7 +88,7 @@ public class CircularSectorLayouter {
         if(previousViewData == null){
             previousViewData = new ViewData(0, 0, 0, 0,
                     mQuadrantHelper.getPointByKey(
-                            SectorPointCreator.getSectorKey(mRadius, 0)
+                            CirclePointsCreator.getSectorKey(mRadius, 0)
                     )
             );
         }

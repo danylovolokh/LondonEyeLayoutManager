@@ -24,7 +24,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
     private final RecyclerView mRecyclerView;
 
-    private final CircularSectorLayouter mLayouter;
+    private final Layouter mLayouter;
 
     /**
      * If this is set to "true" we will calculate size of capsules only once.
@@ -120,8 +120,8 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
         mRecyclerView = recyclerView;
 
-        requestLayout();
-        mLayouter = new CircularSectorLayouter(this, mRadius);
+        requestLayout(); // TODO: check if I need this
+        mLayouter = new Layouter(this, mRadius, 0, 0); // TODO: get from constructor
     }
 
     public void setHasFixedSizeCapsules(boolean hasFixedSizeCapsules){
@@ -215,8 +215,8 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
             addView(view);
             viewData = mLayouter.layoutIn_1st_4th_3rd_Quadrant(view, viewData);
 
-            boolean isViewFullyVisible = isViewFullyVisible(view);
-            if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, isViewFullyVisible " + isViewFullyVisible);
+            boolean isViewFullyVisible = isViewOnTheScreen(view);
+            if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, isViewOnTheScreen " + isViewFullyVisible);
 
             // We update coordinates instead of creating new object to keep the heap clean
             if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, viewData " + viewData);
@@ -226,16 +226,15 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
                 mLastVisiblePosition++;
             }
 
-
-        } while (isLayoutedViewVisible); // TODO: use nextViewIsVisible to
+        } while (isLayoutedViewVisible);
 
     }
 
-    private boolean isViewFullyVisible(View view) {
+    private boolean isViewOnTheScreen(View view) {
         Rect visibleRect = new Rect();
         boolean isVisible = view.getLocalVisibleRect(visibleRect);
-        if(SHOW_LOGS) Log.v(TAG, "isViewFullyVisible isVisible " + isVisible);
-        if(SHOW_LOGS) Log.v(TAG, "isViewFullyVisible visibleRect " + visibleRect);
+        if(SHOW_LOGS) Log.v(TAG, "isViewOnTheScreen isVisible " + isVisible);
+        if(SHOW_LOGS) Log.v(TAG, "isViewOnTheScreen visibleRect " + visibleRect);
 
         return view.getLocalVisibleRect(visibleRect);
     }
