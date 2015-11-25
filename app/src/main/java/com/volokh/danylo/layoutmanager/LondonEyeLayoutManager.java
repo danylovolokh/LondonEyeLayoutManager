@@ -226,6 +226,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
                 mLastVisiblePosition++;
             }
 
+
         } while (isLayoutedViewVisible); // TODO: use nextViewIsVisible to
 
     }
