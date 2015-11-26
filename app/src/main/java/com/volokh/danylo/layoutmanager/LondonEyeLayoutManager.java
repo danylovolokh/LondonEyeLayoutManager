@@ -42,6 +42,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
     private boolean mCanScrollVerticallyHorizontally = true;
 
     private static final int ANGLE_DELTA = 1;
+    private int mHold;
 
     @Override
     public void getHitRect(Rect rect) {
@@ -150,12 +151,13 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
             return 0;
         }
 //        offsetChildrenVertical(dy);
-        for(int indexOfView = 0; indexOfView < childCount; indexOfView++){
-            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy indexOfView " + indexOfView);
-            mLayouter.scrollVerticallyBy(getChildAt(indexOfView), dy, indexOfView);
-        }
 
-        return 0;
+//        if(mHold < 2){
+            int delta = mLayouter.scrollVerticallyBy(dy);
+//            mHold++;
+//        }
+
+        return dy;
     }
 
     @Override
@@ -196,7 +198,6 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
         // It will be our stop flag
         boolean isLayoutedViewVisible;
 
-        int index = 0;
         do{
             View view = recycler.getViewForPosition(mLastVisiblePosition);
             addView(view);
@@ -213,7 +214,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
                 mLastVisiblePosition++;
             }
 
-        } while (index++ < 0);
+        } while (isLayoutedViewVisible);
 
     }
 

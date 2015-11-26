@@ -176,9 +176,9 @@ public class CirclePointsCreator {
             Map<String, Integer> keysIndexes) {
 
         String key = getSectorKey(x, y);
-        if(SHOW_LOGS) Log.v(TAG, "createPoint, key[" + key + "]");
+//        if(SHOW_LOGS) Log.v(TAG, "createPoint, key[" + key + "]");
         int index = indexesKeys.size();
-        if(SHOW_LOGS) Log.v(TAG, "createPoint, index " + index);
+//        if(SHOW_LOGS) Log.v(TAG, "createPoint, index " + index);
 
         indexesKeys.put(index, key);
         keysIndexes.put(key, index);
