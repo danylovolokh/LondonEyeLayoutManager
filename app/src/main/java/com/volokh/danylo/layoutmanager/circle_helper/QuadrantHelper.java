@@ -94,21 +94,26 @@ public class QuadrantHelper {
         do {
 
             nextViewCenter = getNextViewCenter(previousViewCenter);
-            if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewCenter " + nextViewCenter);
 
             int nextViewTop = nextViewCenter.y - nextViewHalfViewHeight;
             if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewTop " + nextViewTop);
 
-            boolean nextViewTopIsBelowPreviousViewBottom = nextViewTop >= previousViewData.getViewBottom();
-            if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewTopIsBelowPreviousViewBottom " + nextViewTopIsBelowPreviousViewBottom);
+            int nextViewBottom = nextViewCenter.y + nextViewHalfViewHeight;
+            if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewBottom " + nextViewBottom);
 
             int nextViewRight = nextViewCenter.x + nextViewHalfViewWidth;
             if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewRight " + nextViewRight);
 
+            boolean nextViewTopIsBelowPreviousViewBottom = nextViewTop >= previousViewData.getViewBottom();
+            if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewTopIsBelowPreviousViewBottom " + nextViewTopIsBelowPreviousViewBottom);
+
+            boolean nextViewBottomIsAbovePreviousViewTop = nextViewBottom <= previousViewData.getViewTop();
+            if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewTopIsBelowPreviousViewBottom " + nextViewTopIsBelowPreviousViewBottom);
+
             boolean nextViewIsToTheLeftOfThePreviousView = nextViewRight <= previousViewData.getViewLeft();
             if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewTopIsBelowPreviousViewBottom " + nextViewTopIsBelowPreviousViewBottom);
 
-            foundNextViewCenter = nextViewTopIsBelowPreviousViewBottom || nextViewIsToTheLeftOfThePreviousView;
+            foundNextViewCenter = nextViewTopIsBelowPreviousViewBottom || nextViewIsToTheLeftOfThePreviousView || nextViewBottomIsAbovePreviousViewTop;
             if(SHOW_LOGS) Log.v(TAG, "findViewCenter, foundNextViewCenter " + foundNextViewCenter);
 
             // "next view center" become previous
@@ -139,26 +144,47 @@ public class QuadrantHelper {
     private Point getNextViewCenter(Point previousViewCenter) {
         /** 1. */
         String previousViewCenterPointKey = CirclePointsCreator.getSectorKey(previousViewCenter.x, previousViewCenter.y);
-        if(SHOW_LOGS) Log.v(TAG, "findViewCenter, previousViewCenterPointKey " + previousViewCenterPointKey);
+        if(SHOW_LOGS) Log.v(TAG, "getNextViewCenter, previousViewCenterPointKey " + previousViewCenterPointKey);
 
         /** 2. */
         int previousViewCenterPointIndex = mKeysIndexes.get(previousViewCenterPointKey);
-        if(SHOW_LOGS) Log.v(TAG, "findViewCenter, previousViewCenterPointIndex " + previousViewCenterPointIndex);
+        if(SHOW_LOGS) Log.v(TAG, "getNextViewCenter, previousViewCenterPointIndex " + previousViewCenterPointIndex);
 
         /** 3. */
         int nextViewCenterCenterPointIndex = previousViewCenterPointIndex + 1;// TODO: index is wrong
-        if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewCenterCenterPointIndex " + nextViewCenterCenterPointIndex);
+        if(SHOW_LOGS) Log.v(TAG, "getNextViewCenter, nextViewCenterCenterPointIndex " + nextViewCenterCenterPointIndex);
 
         /** 4. */
         String nextViewCenterPointKey = mIndexesKeys.get(nextViewCenterCenterPointIndex);
-        if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewCenterPointKey " + nextViewCenterPointKey);
+        if(SHOW_LOGS) Log.v(TAG, "getNextViewCenter, nextViewCenterPointKey " + nextViewCenterPointKey);
 
         /** 5. */
         Point nextViewCenter = mCircleMap.get(nextViewCenterPointKey);
-        if(SHOW_LOGS) Log.v(TAG, "findViewCenter, nextViewCenter " + nextViewCenter);
+        if(SHOW_LOGS) Log.v(TAG, "getNextViewCenter, nextViewCenter " + nextViewCenter);
         return nextViewCenter;
     }
 
     public void reset() {
+    }
+
+    public int getViewCenterPointIndex(int viewCenterX, int viewCenterY) {
+        /** 1. Get Key*/
+        String viewCenterPointKey = CirclePointsCreator.getSectorKey(viewCenterX, viewCenterY);
+        if(SHOW_LOGS) Log.v(TAG, "getIndexOfViewCenterPoint, viewCenterPointKey [" + viewCenterPointKey + "]");
+
+        /** 2. Get index using key*/
+        Integer viewCenterPointIndex = mKeysIndexes.get(viewCenterPointKey);
+        if(viewCenterPointIndex == null){
+            throw new RuntimeException("viewCenterX, " + viewCenterX + ", viewCenterY " + viewCenterY);
+        }
+        if(SHOW_LOGS) Log.v(TAG, "findViewCenter, viewCenterPointIndex " + viewCenterPointIndex);
+
+        return viewCenterPointIndex;
+    }
+
+    public Point getViewCenterPoint(int newCenterPointIndex) {
+        return mCircleMap.get(
+                mIndexesKeys.get(newCenterPointIndex) // Get key. And get point by key
+        );
     }
 }

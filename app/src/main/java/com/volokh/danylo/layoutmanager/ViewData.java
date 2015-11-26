@@ -64,6 +64,10 @@ public class ViewData {
         return mViewLeft;
     }
 
+    public int getViewTop() {
+        return mViewTop;
+    }
+
     public boolean isViewVisible() {
         if(SHOW_LOGS) Log.v(TAG, "isViewVisible " + mIsViewVisible);
         return mIsViewVisible;

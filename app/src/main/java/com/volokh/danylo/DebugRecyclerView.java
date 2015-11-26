@@ -14,6 +14,8 @@ import android.util.AttributeSet;
 public class DebugRecyclerView extends RecyclerView {
 
     private Paint mPaint;
+    private Paint mPaint2;
+
     private int mRadius;
 
     public DebugRecyclerView(Context context) {
@@ -41,12 +43,17 @@ public class DebugRecyclerView extends RecyclerView {
         mPaint = new Paint();
         mPaint.setColor(Color.RED);
         mPaint.setAlpha(100 /*This is not percents*/);
+
+        mPaint2 = new Paint();
+        mPaint2.setColor(Color.BLACK);
+
     }
 
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
         canvas.drawCircle(0, 0, mRadius, mPaint);
+        canvas.drawLine(0, mRadius, mRadius, mRadius, mPaint2);
 
     }
 

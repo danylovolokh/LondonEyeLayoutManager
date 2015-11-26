@@ -82,8 +82,8 @@ public class Layouter {
      * TODO : If we don't find a suitable point below we try to find it to the left of previous view left
      *
      */
-    public ViewData layoutIn_1st_4th_3rd_Quadrant(View view, ViewData previousViewData) {
-        if (SHOW_LOGS)Log.v(TAG, ">> layoutIn_1st_4th_3rd_Quadrant, previousViewData " + previousViewData);
+    public ViewData layoutView(View view, ViewData previousViewData) {
+        if (SHOW_LOGS)Log.v(TAG, ">> layoutView, previousViewData " + previousViewData);
 
         if(previousViewData == null){
             previousViewData = new ViewData(0, 0, 0, 0,
@@ -95,17 +95,17 @@ public class Layouter {
         Pair<Integer, Integer> halfWidthHeight = mCallback.getHalfWidthHeightPair(view);
 
         Point viewCenter = mQuadrantHelper.findNextViewCenter(previousViewData, halfWidthHeight.first, halfWidthHeight.second);
-        if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, viewCenter " + viewCenter);
+        if (SHOW_LOGS) Log.v(TAG, "layoutView, viewCenter " + viewCenter);
 
         performLayout(view, viewCenter, halfWidthHeight.first, halfWidthHeight.second);
-        if (SHOW_LOGS) Log.v(TAG, "<< layoutIn_1st_4th_3rd_Quadrant");
+        if (SHOW_LOGS) Log.v(TAG, "<< layoutView");
         previousViewData.updateData(view, viewCenter);
 
         return previousViewData;
     }
 
     private void performLayout(View view, Point viewCenter, int halfViewWidth, int halfViewHeight) {
-        if (SHOW_LOGS) Log.i(TAG, "layoutIn_1st_4th_3rd_Quadrant, final viewCenter " + viewCenter);
+        if (SHOW_LOGS) Log.i(TAG, "layoutView, final viewCenter " + viewCenter);
 
         int left, top, right, bottom;
 
@@ -115,31 +115,54 @@ public class Layouter {
         left = viewCenter.x - halfViewWidth;
         right = viewCenter.x + halfViewWidth;
 
-        if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, left " + left);
-        if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, top " + top);
-        if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, right " + right);
-        if (SHOW_LOGS) Log.v(TAG, "layoutIn_1st_4th_3rd_Quadrant, bottom " + bottom);
+        if (SHOW_LOGS) Log.v(TAG, "layoutView, left " + left);
+        if (SHOW_LOGS) Log.v(TAG, "layoutView, top " + top);
+        if (SHOW_LOGS) Log.v(TAG, "layoutView, right " + right);
+        if (SHOW_LOGS) Log.v(TAG, "layoutView, bottom " + bottom);
 
         mCallback.layoutDecorated(view, left, top, right, bottom);
     }
 
-    public void scrollVerticallyBy(View view, int dy) {
-//        if (SHOW_LOGS) Log.v(TAG, ">> scrollVerticallyBy, dy " + dy);
-//
-//        int previousViewCenterY = (view.getTop() - view.getHeight()/2 );
-//        int previousViewCenterX = mQuadrantHelper.getXFromYInFourthQuadrant(previousViewCenterY);
-//
-//        int newCenterY = previousViewCenterY + dy;
-//        int newCenterX = mQuadrantHelper.getXFromYInFourthQuadrant(newCenterY);
-//
-//        int dx = newCenterX - previousViewCenterX;
-//
-//        if (SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy, viewCenterY " + viewCenterY);
-//
-//        Pair<Integer, Integer> halfWidthHeight = mCallback.getHalfWidthHeightPair(view);
-//        view.offsetTopAndBottom(dy);
-//        view.offsetLeftAndRight(dx);
-//        performLayoutByY(view, newCenterY, halfWidthHeight.first, halfWidthHeight.second);
+    public void scrollVerticallyBy(View view, int indexOffset, int indexOfView) {
+        if (SHOW_LOGS) Log.v(TAG, ">> scrollVerticallyBy, indexOffset " + indexOffset);
+
+        int right = view.getRight();
+        int width = view.getWidth();
+
+        int top = view.getTop();
+        int height = view.getHeight();
+
+        int viewCenterX = right - width/2;
+        int viewCenterY = top + height/2;
+
+        int centerPointIndex = mQuadrantHelper.getViewCenterPointIndex(viewCenterX, viewCenterY);
+
+        int newCenterPointIndex = centerPointIndex + indexOffset;
+        
+        Point newCenterPoint = mQuadrantHelper.getViewCenterPoint(newCenterPointIndex);
+        if (SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy, viewCenterY " + viewCenterY);
+
+        if(newCenterPoint == null){
+            throw new RuntimeException("newCenterPointIndex " + newCenterPointIndex);
+        }
+
+        int dx = newCenterPoint.x - viewCenterX;
+        int dy = newCenterPoint.y - viewCenterY;
+
+        if(dy != indexOffset){
+            // todo remove
+            Log.e(TAG, "founded dy " + dy + ", indexOffset " +indexOffset);
+        }
+
+        view.offsetTopAndBottom(dy);
+        view.offsetLeftAndRight(dx);
+
+        int new_right = view.getRight();
+        int new_width = view.getWidth();
+
+        int new_top = view.getTop();
+        int new_height = view.getHeight();
+        if (SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy, viewCenterY " + viewCenterY);
 
     }
 }

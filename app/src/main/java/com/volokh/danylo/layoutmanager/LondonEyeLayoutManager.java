@@ -94,12 +94,6 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
         return widthHeight;
     }
 
-    /**
-     * This value is healed for optimization. We don't calculate angle from 360 every time.
-     * We reuse this value that was set during previous view layout.
-     */
-    private AtomicInteger mFourthQuadrantLastAngle = new AtomicInteger();
-
     private final int mRadius;
 
     private int mHalfDecoratedCapsuleWidth;
@@ -148,28 +142,20 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
     @Override
     public int scrollVerticallyBy(int dy, RecyclerView.Recycler recycler, RecyclerView.State state) {
-//        if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy dy " + dy);
-//        int childCount = getChildCount();
-//        if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy childCount " + childCount);
-//
-//        if (childCount == 0) {
-//            return 0;
-//        }
-//        for(int indexOfView = 0; indexOfView < childCount; indexOfView++){
-//            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy indexOfView " + indexOfView);
-//            mLayouter.scrollVerticallyBy(getChildAt(indexOfView), dy);
-//        }
-//        int previousViewBottom = 0;
-//        mFourthQuadrantLastAngle.set(360);
-//
-//        for(int i = 0; i < getChildCount(); i++){
-//            View view = getChildAt(i);
-////            addView(view);
-//            layoutInFourthQuadrant(view, recycler, previousViewBottom/*This is Recycler view Top == 0*/);
-//            previousViewBottom = view.getBottom();
-//        }
+        if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy dy " + dy);
+        int childCount = getChildCount();
+        if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy childCount " + childCount);
 
-        return -dy;
+        if (childCount == 0) {
+            return 0;
+        }
+//        offsetChildrenVertical(dy);
+        for(int indexOfView = 0; indexOfView < childCount; indexOfView++){
+            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy indexOfView " + indexOfView);
+            mLayouter.scrollVerticallyBy(getChildAt(indexOfView), dy, indexOfView);
+        }
+
+        return 0;
     }
 
     @Override
@@ -210,10 +196,11 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
         // It will be our stop flag
         boolean isLayoutedViewVisible;
 
+        int index = 0;
         do{
             View view = recycler.getViewForPosition(mLastVisiblePosition);
             addView(view);
-            viewData = mLayouter.layoutIn_1st_4th_3rd_Quadrant(view, viewData);
+            viewData = mLayouter.layoutView(view, viewData);
 
             boolean isViewFullyVisible = isViewOnTheScreen(view);
             if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, isViewOnTheScreen " + isViewFullyVisible);
@@ -226,7 +213,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
                 mLastVisiblePosition++;
             }
 
-        } while (isLayoutedViewVisible);
+        } while (index++ < 0);
 
     }
 
