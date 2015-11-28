@@ -3,9 +3,7 @@ package com.volokh.danylo.layoutmanager.circle_helper;
 import android.util.Log;
 
 import com.volokh.danylo.Config;
-import com.volokh.danylo.layoutmanager.Point;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -27,13 +25,6 @@ public class CirclePointsCreator {
         mY0 = y0;
     }
 
-    public static String getSectorKey(int x, int y) {
-        return (x > 0 ? "+" : "") + x +
-                "" +
-                (y > 0 ? "+" : "") + y;
-    }
-
-
     /**
      * This method is based on "Midpoint circle algorithm."
      *
@@ -48,48 +39,30 @@ public class CirclePointsCreator {
      *
      *  4. Mirror 2nd semicircle points using points from 1 semicircle
      *
-     * @param circlePoints - a result map which should be filled with
-     *                     key = {@link #getSectorKey(int, int)}
-     *                     value = {@link com.volokh.danylo.layoutmanager.Point}
-     *
-     * @param indexesKeys a map which should be filled with
-     *                     key = index of a circle point starting from (radius;0)
-     *                     value = a key that can be used to retrieve {@link com.volokh.danylo.layoutmanager.Point} from "circlePoints" map
-     *
-     * @param keysIndexes a map which should be filled with
-     *                    key = a key that can be used to retrieve {@link com.volokh.danylo.layoutmanager.Point} from "circlePoints" map
-     *                    value = index of a circle point starting from (radius;0)
      */
     public void fillCirclePointsCircle(
-                                Map<String, Point> circlePoints,
-                                Map<Integer, String> indexesKeys,
-                                Map<String, Integer> keysIndexes)
+            Map<Integer, Point> circleIndexPoint,
+            Map<Point, Integer> circlePointIndex)
     {
         if(SHOW_LOGS) Log.v(TAG, ">> fillCirclePointsCircle");
 
-        createFirstOctant(circlePoints, indexesKeys, keysIndexes);
+        createFirstOctant(circleIndexPoint, circlePointIndex);
 
-        /** at this stage "circlePoints" contains only the points from first octant*/
+        /** at this stage "circleIndexPoint" and "circlePointIndex" contains only the points from first octant*/
         CircleMirrorHelper.mirror_2nd_Octant(
-                new HashMap<>(circlePoints), /*copy points of first octant just in case*/
-                indexesKeys,
-                keysIndexes,
-                circlePoints);
+                circleIndexPoint,
+                circlePointIndex);
 
-        /** at this stage "circlePoints" contains only the points from first quadrant*/
+        /** at this stage "circleIndexPoint" and "circlePointIndex" contains only the points from first quadrant*/
         CircleMirrorHelper.mirror_2nd_Quadrant(
-                new HashMap<>(circlePoints), /*copy points of first quadrant just in case*/
-                indexesKeys,
-                keysIndexes,
-                circlePoints
+                circleIndexPoint,
+                circlePointIndex
         );
 
-        /** at this stage "circlePoints" contains only the points from first semicircle*/
+        /** at this stage "circleIndexPoint" and "circlePointIndex" contains only the points from first semicircle*/
         CircleMirrorHelper.mirror_2nd_Semicircle(
-                new HashMap<>(circlePoints), /*copy points of first semicircle just in case*/
-                indexesKeys,
-                keysIndexes,
-                circlePoints
+                circleIndexPoint,
+                circlePointIndex
         );
 
         if(SHOW_LOGS) Log.v(TAG, "<< fillCirclePointsCircle");
@@ -147,16 +120,16 @@ public class CirclePointsCreator {
      *                     *************************
      */
     private void createFirstOctant(
-            Map<String, Point> circlePoints,
-            Map<Integer, String> indexesKeys,
-            Map<String, Integer> keysIndexes) {
+            Map<Integer, Point> circleIndexPoint,
+            Map<Point, Integer> circlePointIndex
+    ) {
 
         int x = mRadius;
         int y = 0;
         int decisionOver2 = 1 - x;   // Decision criterion divided by 2 evaluated at x=r, y=0
         while(y <= x){
 
-            createPoint(x + mX0, y + mY0, circlePoints, indexesKeys, keysIndexes);
+            createPoint(x + mX0, y + mY0, circleIndexPoint, circlePointIndex);
 
             y++;
             if (decisionOver2<=0){
@@ -171,17 +144,17 @@ public class CirclePointsCreator {
     private void createPoint(
             int x,
             int y,
-            Map<String, Point> circlePoints,
-            Map<Integer, String> indexesKeys,
-            Map<String, Integer> keysIndexes) {
+            Map<Integer, Point> circleIndexPoint,
+            Map<Point, Integer> circlePointIndex
+            ) {
 
-        String key = getSectorKey(x, y);
 //        if(SHOW_LOGS) Log.v(TAG, "createPoint, key[" + key + "]");
-        int index = indexesKeys.size();
+        int index = circleIndexPoint.size();
 //        if(SHOW_LOGS) Log.v(TAG, "createPoint, index " + index);
 
-        indexesKeys.put(index, key);
-        keysIndexes.put(key, index);
-        circlePoints.put(key, new Point(x, y));
+        Point point = new Point(x, y);
+
+        circleIndexPoint.put(index, point);
+        circlePointIndex.put(point, index);
     }
 }

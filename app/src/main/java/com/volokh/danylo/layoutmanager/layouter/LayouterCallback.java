@@ -1,4 +1,4 @@
-package com.volokh.danylo.layoutmanager;
+package com.volokh.danylo.layoutmanager.layouter;
 
 import android.graphics.Rect;
 import android.util.Pair;

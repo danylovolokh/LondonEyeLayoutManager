@@ -3,9 +3,7 @@ package com.volokh.danylo.layoutmanager.circle_helper;
 import android.util.Log;
 
 import com.volokh.danylo.Config;
-import com.volokh.danylo.layoutmanager.Point;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -53,54 +51,50 @@ public class CircleMirrorHelper{
      *                     |
      */
     public static void mirror_2nd_Octant(
-            Map<String, Point> firstOctant,
-            Map<Integer, String> indexesKeys,
-            Map<String, Integer> keysIndexes,
-            Map<String, Point> circlePoints
+            Map<Integer, Point> circleIndexPoint,
+            Map<Point, Integer> circlePointIndex
     ) {
 
-        int countOfPointsIn_1st_octant = firstOctant.size();
+        int countOfPointsIn_1st_octant = circlePointIndex.size();
         if(SHOW_LOGS) Log.v(TAG, "mirror_2nd_Octant, countOfPointsIn_1st_octant " + countOfPointsIn_1st_octant);
 
         for(int pointIndex = countOfPointsIn_1st_octant - 1;
             pointIndex >= 0;
             pointIndex-- ){
 
-            createMirroredPoint(Action.MIRROR_2ND_OCTANT, pointIndex, firstOctant, indexesKeys, keysIndexes, circlePoints);
+            createMirroredPoint(Action.MIRROR_2ND_OCTANT, pointIndex, circleIndexPoint, circlePointIndex);
         }
     }
 
     public static void mirror_2nd_Quadrant(
-            HashMap<String, Point> firstQuadrantPoints,
-            Map<Integer, String> indexesKeys,
-            Map<String, Integer> keysIndexes,
-            Map<String, Point> circlePoints) {
+            Map<Integer, Point> circleIndexPoint,
+            Map<Point, Integer> circlePointIndex
+    ) {
 
-        int countOfPointsIn_1st_quadrant = firstQuadrantPoints.size();
+        int countOfPointsIn_1st_quadrant = circlePointIndex.size();
         if(SHOW_LOGS) Log.v(TAG, "mirror_2nd_Quadrant, countOfPointsIn_1st_quadrant " + countOfPointsIn_1st_quadrant);
 
         for(int pointIndex = countOfPointsIn_1st_quadrant - 1;
             pointIndex >= 0;
             pointIndex-- ){
 
-            createMirroredPoint(Action.MIRROR_2ND_QUADRANT, pointIndex, firstQuadrantPoints, indexesKeys, keysIndexes, circlePoints);
+            createMirroredPoint(Action.MIRROR_2ND_QUADRANT, pointIndex, circleIndexPoint, circlePointIndex);
         }
     }
 
     public static void mirror_2nd_Semicircle(
-            HashMap<String, Point> firstSemicircle,
-            Map<Integer, String> indexesKeys,
-            Map<String, Integer> keysIndexes,
-            Map<String, Point> circlePoints) {
+            Map<Integer, Point> circleIndexPoint,
+            Map<Point, Integer> circlePointIndex
+    ) {
 
-        int countOfPointsIn_1st_semicircle = firstSemicircle.size();
+        int countOfPointsIn_1st_semicircle = circlePointIndex.size();
         if(SHOW_LOGS) Log.v(TAG, "mirror_2nd_Semicircle, countOfPointsIn_1st_semicircle " + countOfPointsIn_1st_semicircle);
 
         for(int pointIndex = countOfPointsIn_1st_semicircle - 2; // don't count (-radius, 0) because it already in the list
             pointIndex > 0; // don't count (radius, 0) because it already in the list
             pointIndex-- ){
 
-            createMirroredPoint(Action.MIRROR_2ND_SEMICIRCLE, pointIndex, firstSemicircle, indexesKeys, keysIndexes, circlePoints);
+            createMirroredPoint(Action.MIRROR_2ND_SEMICIRCLE, pointIndex, circleIndexPoint, circlePointIndex);
 
         }
 
@@ -109,16 +103,13 @@ public class CircleMirrorHelper{
     public static void createMirroredPoint(
             Action action,
             int pointIndex,
-            Map<String, Point> existingPoints,
-            Map<Integer, String> indexesKeys,
-            Map<String, Integer> keysIndexes,
-            Map<String, Point> circlePoints
+            Map<Integer, Point> circleIndexPoint,
+            Map<Point, Integer> circlePointIndex
             ) {
 
-        String keyOfPoint = indexesKeys.get(pointIndex);
-        Point pointAtIndex = existingPoints.get(keyOfPoint);
+        Point pointAtIndex = circleIndexPoint.get(pointIndex);
 
-        if(pointAtIndex.x != pointAtIndex.y){
+        if(pointAtIndex.getX() != pointAtIndex.getY()){
             Point mirroredPoint;
             switch (action){
                 case MIRROR_2ND_OCTANT:
@@ -134,12 +125,10 @@ public class CircleMirrorHelper{
                     throw new RuntimeException("Not handled action " + action);
             }
 
-            String key = CirclePointsCreator.getSectorKey(mirroredPoint.x, mirroredPoint.y);
-            int index = indexesKeys.size();
+            int index = circleIndexPoint.size();
 
-            indexesKeys.put(index, key);
-            keysIndexes.put(key, index);
-            circlePoints.put(key, mirroredPoint);
+            circleIndexPoint.put(index, mirroredPoint);
+            circlePointIndex.put(mirroredPoint, index);
 
         } else {
             if(SHOW_LOGS) Log.w(TAG, "createMirroredPoint, this point is already created. Skip it");
@@ -177,7 +166,7 @@ public class CircleMirrorHelper{
      *
      */
     private static Point mirror_2nd_OctantPoint(Point firstOctantPoint) {
-        return new Point(firstOctantPoint.y, firstOctantPoint.x);
+        return new Point(firstOctantPoint.getY(), firstOctantPoint.getX());
     }
 
     /**
@@ -214,7 +203,7 @@ public class CircleMirrorHelper{
      *   y3* = y3
      */
     private static Point mirror_2nd_QuadrantPoint(Point secondQuadrantPoint) {
-        return new Point(-secondQuadrantPoint.x, secondQuadrantPoint.y);
+        return new Point(-secondQuadrantPoint.getX(), secondQuadrantPoint.getY());
     }
 
     /**
@@ -268,7 +257,7 @@ public class CircleMirrorHelper{
      *   y4* = -y4
      */
     private static Point mirror_2nd_SemicirclePoint(Point firstSemicirclePoint) {
-        return new Point(firstSemicirclePoint.x, -firstSemicirclePoint.y);
+        return new Point(firstSemicirclePoint.getX(), -firstSemicirclePoint.getY());
     }
 
 }

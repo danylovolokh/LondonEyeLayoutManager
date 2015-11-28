@@ -8,14 +8,18 @@ import android.util.Pair;
 import android.view.View;
 
 import com.volokh.danylo.Config;
+import com.volokh.danylo.layoutmanager.circle_helper.FourQuadrantHelper;
 import com.volokh.danylo.layoutmanager.circle_helper.UnitCircleFourthQuadrantHelper;
-
-import java.util.concurrent.atomic.AtomicInteger;
+import com.volokh.danylo.layoutmanager.layouter.Layouter;
+import com.volokh.danylo.layoutmanager.layouter.LayouterCallback;
+import com.volokh.danylo.layoutmanager.scroller.PixelPerfectScrollHandler;
+import com.volokh.danylo.layoutmanager.scroller.ScrollHandler;
+import com.volokh.danylo.layoutmanager.scroller.ScrollHandlerCallback;
 
 /**
  * Created by danylo.volokh on 10/17/2015.
  */
-public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implements LayouterCallback {
+public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implements LayouterCallback, ScrollHandlerCallback {
 
     private static final boolean SHOW_LOGS = Config.SHOW_LOGS;
     private static final String TAG = LondonEyeLayoutManager.class.getSimpleName();
@@ -25,6 +29,9 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
     private final RecyclerView mRecyclerView;
 
     private final Layouter mLayouter;
+
+    private final ScrollHandler mScroller;
+
 
     /**
      * If this is set to "true" we will calculate size of capsules only once.
@@ -115,8 +122,11 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
         mRecyclerView = recyclerView;
 
-        requestLayout(); // TODO: check if I need this
-        mLayouter = new Layouter(this, mRadius, 0, 0); // TODO: get from constructor
+        requestLayout(); // TODO: check if I need this. Probably it is causing multiple layout first time
+        FourQuadrantHelper quadrantHelper = new FourQuadrantHelper(mRadius, 0, 0);
+
+        mLayouter = new Layouter(this, mRadius, quadrantHelper); // TODO: get from constructor
+        mScroller = new PixelPerfectScrollHandler(this, quadrantHelper); // TODO: use strategy for this
     }
 
     public void setHasFixedSizeCapsules(boolean hasFixedSizeCapsules){
@@ -153,7 +163,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 //        offsetChildrenVertical(dy);
 
 //        if(mHold < 2){
-            int delta = mLayouter.scrollVerticallyBy(dy);
+        mScroller.scrollVerticallyBy(dy);
 //            mHold++;
 //        }
 
