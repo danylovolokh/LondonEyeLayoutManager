@@ -107,7 +107,8 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
     private int mHalfDecoratedCapsuleWidth;
     private int mHalfDecoratedCapsuleHeight;
 
-    private int mLastVisiblePosition; //TODO: restore state
+    private int mFirstVisiblePosition = 0; //TODO: restore state
+    private int mLastVisiblePosition = 0; //TODO: restore state
 
     private int mCurrentViewPosition;
 
@@ -126,7 +127,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
         FourQuadrantHelper quadrantHelper = new FourQuadrantHelper(mRadius, 0, 0);
 
         mLayouter = new Layouter(this, mRadius, quadrantHelper); // TODO: get from constructor
-        mScroller = new PixelPerfectScrollHandler(this, quadrantHelper); // TODO: use strategy for this
+        mScroller = new PixelPerfectScrollHandler(this, mRadius, quadrantHelper); // TODO: use strategy for this
     }
 
     public void setHasFixedSizeCapsules(boolean hasFixedSizeCapsules){
@@ -160,7 +161,12 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
         if (childCount == 0) {
             return 0;
         }
-//        offsetChildrenVertical(dy);
+
+        //Optimize the case where the entire data set is too small to scroll
+        boolean canScroll = mScroller.canScroll();
+        if(!canScroll){
+            return 0;
+        }
 
 //        if(mHold < 2){
         mScroller.scrollVerticallyBy(dy);
@@ -181,10 +187,17 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
     public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
         if(SHOW_LOGS) Log.v(TAG, ">> onLayoutChildren, state " + state);
 
+        //We have nothing to show for an empty data set but clear any existing views
+        int itemCount = getItemCount();
+        if (itemCount == 0) {
+            removeAllViews();
+            return;
+        }
+
         removeAllViews();
 
-        mLayouter.reset();
         mLastVisiblePosition = 0;
+        mFirstVisiblePosition = 0;
 
         if(mHasFixedSizeCapsules){
             // perform an optimization. If mHasFixedSizeCapsules == true we will calculate a size of views only once
@@ -206,26 +219,22 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
         // when this variable will be false it mean that we have layout-ed a view outside of the RecyclerView.
         // It will be our stop flag
-        boolean isLayoutedViewVisible;
+        boolean isLastLayoutedView;
 
         do{
             View view = recycler.getViewForPosition(mLastVisiblePosition);
             addView(view);
             viewData = mLayouter.layoutView(view, viewData);
 
-            boolean isViewFullyVisible = isViewOnTheScreen(view);
-            if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, isViewOnTheScreen " + isViewFullyVisible);
-
             // We update coordinates instead of creating new object to keep the heap clean
             if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, viewData " + viewData);
 
-            isLayoutedViewVisible = viewData.isViewVisible();
-            if(isLayoutedViewVisible){
-                mLastVisiblePosition++;
-            }
+            isLastLayoutedView = mLayouter.isLastLayoutedView(view);
+            mLastVisiblePosition++;
 
-        } while (isLayoutedViewVisible);
+        } while (!isLastLayoutedView && mLastVisiblePosition < itemCount);
 
+        if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, mLastVisiblePosition " + mLastVisiblePosition);
     }
 
     private boolean isViewOnTheScreen(View view) {
@@ -289,6 +298,11 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
         // return a value to "true" because we do actually can scroll in both ways
         mCanScrollVerticallyHorizontally = true;
+    }
+
+    @Override
+    public int getFirstVisiblePosition() {
+        return mFirstVisiblePosition;
     }
 
 //    /**

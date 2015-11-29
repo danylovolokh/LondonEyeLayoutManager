@@ -117,9 +117,6 @@ public class FourQuadrantHelper { // TODO: implements generic quadrant helper
         return nextViewCenter;
     }
 
-    public void reset() {
-    }
-
     public int getViewCenterPointIndex(Point point) {
 
         int viewCenterPointIndex = mCirclePointIndex.get(point);

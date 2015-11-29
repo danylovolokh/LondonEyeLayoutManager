@@ -17,4 +17,6 @@ public interface LayouterCallback {
     int getChildCount();
 
     View getChildAt(int index);
+
+    int getHeight();
 }

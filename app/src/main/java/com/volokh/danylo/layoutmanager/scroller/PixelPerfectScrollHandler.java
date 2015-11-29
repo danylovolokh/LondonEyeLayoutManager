@@ -11,6 +11,7 @@ import com.volokh.danylo.layoutmanager.circle_helper.UpdatablePoint;
 
 /**
  * Created by danylo.volokh on 28.11.2015.
+ * TODO: specify 4th quadrant specific stuff
  */
 public class PixelPerfectScrollHandler implements ScrollHandler {
 
@@ -19,9 +20,11 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
 
     private final ScrollHandlerCallback mCallback;
     private final FourQuadrantHelper mQuadrantHelper;
+    private final int mRadius;
 
-    public PixelPerfectScrollHandler(ScrollHandlerCallback callback, FourQuadrantHelper quadrantHelper){
+    public PixelPerfectScrollHandler(ScrollHandlerCallback callback, int radius, FourQuadrantHelper quadrantHelper){
         mCallback = callback;
+        mRadius = radius;
         mQuadrantHelper = quadrantHelper;
     }
 
@@ -71,6 +74,9 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
 
     @Override
     public void scrollVerticallyBy(int dy) {
+
+        boolean topBoundReached = isTopBoundReached();
+//        boolean bottomBoundReached = getLastVisibleRow() >= maxRowCount;
 
         View firstView = mCallback.getChildAt(0);
         Point firstViewNewCenter = scrollFirstViewVerticallyBy(firstView, -dy);
@@ -127,5 +133,66 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
 
             previousViewData.updateData(view, newCenterPoint);
         }
+    }
+
+    private boolean isTopBoundReached() {
+        int firstVisiblePosition = mCallback.getFirstVisiblePosition();
+        boolean isTopBoundReached;
+        if(firstVisiblePosition == 0){
+            View firstView = mCallback.getChildAt(0);
+            isTopBoundReached = true;
+        } else {
+            isTopBoundReached = false;
+        }
+        return isTopBoundReached;
+    }
+
+    @Override
+    public boolean canScroll() {
+        boolean canScroll;
+        int childCount = mCallback.getChildCount();
+        if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy, childCount " + childCount);
+
+        View lastView = mCallback.getChildAt(childCount-1);
+        int recyclerHeight = mCallback.getHeight();
+        if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy, recyclerHeight " + recyclerHeight);
+
+        if(recyclerHeight > mRadius){
+            /** mean that circle is hiding behind the left edge
+             *   ___________
+             *  |        |  |
+             *  |        |  |
+             *  |      _/   |
+             *  |_____/     |
+             *  |           |
+             *  |           |
+             *  |           |
+             *  |___________|
+             *
+             */
+            int spaceToLeftEdge = lastView.getLeft();
+            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy spaceToLeftEdge " + spaceToLeftEdge);
+            canScroll = spaceToLeftEdge < 0;
+
+        } else {
+            /** mean that circle is hiding behind the bottom edge
+             *   ___________
+             *  |     \     |
+             *  |       \   |
+             *  |        |  |
+             *  |        |  |
+             *  |        |  |
+             *  |        |  |
+             *  |       /   |
+             *  |_____/_____|
+             *
+             */
+
+            int lastViewBottom = lastView.getBottom();
+            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy lastViewBottom " + lastViewBottom);
+            canScroll = lastViewBottom > recyclerHeight;
+        }
+        if(SHOW_LOGS) Log.v(TAG, "canScroll " + canScroll);
+        return canScroll;
     }
 }

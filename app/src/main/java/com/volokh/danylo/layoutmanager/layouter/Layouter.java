@@ -24,10 +24,6 @@ public class Layouter {
 
     private final int mRadius;
 
-    public void reset() {
-        mQuadrantHelper.reset();
-    }
-
     public Layouter(LayouterCallback callback, int radius, FourQuadrantHelper quadrantHelper){
         mCallback = callback;
         mRadius = radius;
@@ -119,4 +115,47 @@ public class Layouter {
     }
 
 
+    public boolean isLastLayoutedView(View view) {
+        boolean isLastLayoutedView;
+        int recyclerHeight = mCallback.getHeight();
+        if(SHOW_LOGS) Log.v(TAG, "isLastLayoutedView, recyclerHeight " + recyclerHeight);
+
+        if(recyclerHeight > mRadius){
+            /** mean that circle is hiding behind the left edge
+             *   ___________
+             *  |        |  |
+             *  |        |  |
+             *  |      _/   |
+             *  |_____/     |
+             *  |           |
+             *  |           |
+             *  |           |
+             *  |___________|
+             *
+             */
+            int spaceToLeftEdge = view.getLeft();
+            if(SHOW_LOGS) Log.v(TAG, "isLastLayoutedView, spaceToLeftEdge " + spaceToLeftEdge);
+            isLastLayoutedView = spaceToLeftEdge <= 0;
+
+        } else {
+            /** mean that circle is hiding behind the bottom edge
+             *   ___________
+             *  |     \     |
+             *  |       \   |
+             *  |        |  |
+             *  |        |  |
+             *  |        |  |
+             *  |        |  |
+             *  |       /   |
+             *  |_____/_____|
+             *
+             */
+
+            int lastViewBottom = view.getBottom();
+            if(SHOW_LOGS) Log.v(TAG, "isLastLayoutedView, lastViewBottom " + lastViewBottom);
+            isLastLayoutedView = lastViewBottom >= recyclerHeight;
+        }
+        if(SHOW_LOGS) Log.v(TAG, "isLastLayoutedView, " + isLastLayoutedView);
+        return isLastLayoutedView;
+    }
 }

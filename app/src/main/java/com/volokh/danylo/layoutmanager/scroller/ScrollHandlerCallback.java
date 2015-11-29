@@ -9,4 +9,8 @@ public interface ScrollHandlerCallback {
     int getChildCount();
 
     View getChildAt(int index);
+
+    int getHeight();
+
+    int getFirstVisiblePosition();
 }
