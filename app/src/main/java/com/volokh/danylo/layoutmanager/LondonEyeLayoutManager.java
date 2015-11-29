@@ -31,6 +31,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
     private final Layouter mLayouter;
 
     private final ScrollHandler mScroller;
+    private final FourQuadrantHelper mQuadrantHelper;
 
 
     /**
@@ -123,10 +124,10 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
         mRecyclerView = recyclerView;
 
-        FourQuadrantHelper quadrantHelper = new FourQuadrantHelper(mRadius, 0, 0);
+        mQuadrantHelper = new FourQuadrantHelper(mRadius, 0, 0);
 
-        mLayouter = new Layouter(this, mRadius, quadrantHelper); // TODO: get from constructor
-        mScroller = new PixelPerfectScrollHandler(this, mRadius, quadrantHelper); // TODO: use strategy for this
+        mLayouter = new Layouter(this, mRadius, mQuadrantHelper); // TODO: get from constructor
+        mScroller = new PixelPerfectScrollHandler(this, mRadius, mQuadrantHelper, mLayouter); // TODO: use strategy for this
     }
 
     public void setHasFixedSizeCapsules(boolean hasFixedSizeCapsules){
@@ -168,7 +169,8 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 //        }
 
 //        if(mHold < 2){
-        int delta = mScroller.scrollVerticallyBy(dy);
+
+        int delta = mScroller.scrollVerticallyBy(dy, recycler);
 //            mHold++;
 //        }
 
@@ -214,7 +216,9 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
             Log.v(TAG, "onLayoutChildren, mLastVisiblePosition " + mLastVisiblePosition);        }
 
 
-        ViewData viewData = null;
+        ViewData viewData = new ViewData(0, 0, 0, 0,
+                    mQuadrantHelper.getViewCenterPoint(0)
+            );
 
         // when this variable will be false it mean that we have layout-ed a view outside of the RecyclerView.
         // It will be our stop flag
@@ -223,7 +227,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
         do{
             View view = recycler.getViewForPosition(mLastVisiblePosition);
             addView(view);
-            viewData = mLayouter.layoutView(view, viewData);
+            viewData = mLayouter.layoutViewNextView(view, viewData);
 
             // We update coordinates instead of creating new object to keep the heap clean
             if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, viewData " + viewData);
@@ -234,15 +238,6 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
         } while (!isLastLayoutedView && mLastVisiblePosition < itemCount);
 
         if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, mLastVisiblePosition " + mLastVisiblePosition);
-    }
-
-    private boolean isViewOnTheScreen(View view) {
-        Rect visibleRect = new Rect();
-        boolean isVisible = view.getLocalVisibleRect(visibleRect);
-        if(SHOW_LOGS) Log.v(TAG, "isViewOnTheScreen isVisible " + isVisible);
-        if(SHOW_LOGS) Log.v(TAG, "isViewOnTheScreen visibleRect " + visibleRect);
-
-        return view.getLocalVisibleRect(visibleRect);
     }
 
     // TODO: move it to layout-er
@@ -309,180 +304,23 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
         return mLastVisiblePosition;
     }
 
-//    /**
-//     *                          |
-//     *                          |
-//     *       SECOND_QUADRANT    |    FIRST_QUADRANT
-//     *                          |
-//     *                          |
-//     *     -------------------------------------------
-//     *                          |    FOURTH_QUADRANT
-//     *       THIRD_QUADRANT     |
-//     *                          |         /
-//     *                          |       |/  we are going on the circle in this direction
-//     *                          |       |_
-//     *                          |
-//     */
-//    private void layoutInFourthQuadrant(View view, RecyclerView.Recycler recycler, int previousViewBottom) {
-//        if(SHOW_LOGS) Log.v(TAG, ">> layoutInFourthQuadrant");
-//
-//        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, previousViewBottom " + previousViewBottom);
-//        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, mFourthQuadrantLastAngle " + mFourthQuadrantLastAngle);
-//
-//        int decoratedCapsuleWidth;
-//        int decoratedCapsuleHeight;
-//
-//        if(mHasFixedSizeCapsules){
-//            // this is an optimization
-//            if(mHalfDecoratedCapsuleWidth == 0 || mHalfDecoratedCapsuleHeight == 0){
-//                throw new RuntimeException("mHalfDecoratedCapsuleWidth " + mHalfDecoratedCapsuleWidth + ", mHalfDecoratedCapsuleHeight " + mHalfDecoratedCapsuleHeight + ", values should be calculated earlier");
-//            }
-//            decoratedCapsuleWidth = mHalfDecoratedCapsuleWidth;
-//            decoratedCapsuleHeight = mHalfDecoratedCapsuleHeight;
-//        } else {
-//            measureChildWithMargins(view, 0, 0);
-//            decoratedCapsuleWidth = getDecoratedMeasuredWidth(view);
-//            decoratedCapsuleHeight = getDecoratedMeasuredHeight(view);
-//        }
-//        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, decoratedCapsuleWidth " + decoratedCapsuleWidth);
-//        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, decoratedCapsuleHeight " + decoratedCapsuleHeight);
-//
-//        int viewCenterY = (int) (mOriginY + sineInQuadrant(mFourthQuadrantLastAngle.get(), 4) * mRadius);
-//        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, initial viewCenterY " + viewCenterY);
-//
-//        int halfViewHeight = decoratedCapsuleHeight / 2;
-//        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, halfViewHeight " + halfViewHeight);
-//
-//        // viewTop is higher than viewCenterY. And "higher" is up. That's why we subtract halfViewHeight;
-//        int viewTop = viewCenterY - halfViewHeight;
-//
-//        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, initial viewTop " + viewTop);
-//
-//        viewCenterY = mUnitCircleHelper.findViewCenterY(previousViewBottom, halfViewHeight, viewTop, mFourthQuadrantLastAngle);
-//
-//        int left, top, right, bottom;
-//
-//        top = viewCenterY + (halfViewHeight * getQuadrantSinMultiplier(4));
-//        bottom = viewCenterY - (halfViewHeight * getQuadrantSinMultiplier(4));
-//
-//        int halfViewWidth = decoratedCapsuleWidth / 2;
-//        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, halfViewWidth " + halfViewWidth);
-//        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, mFourthQuadrantLastAngle " + mFourthQuadrantLastAngle);
-//
-//        int viewCenterX = (int) (mOriginX + cosineInQuadrant(mFourthQuadrantLastAngle.get(), 4) * mRadius);
-//        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, viewCenterX " + viewCenterX);
-//
-//        left = viewCenterX - halfViewWidth;
-//        right = viewCenterX + halfViewWidth;
-//        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, getWidth " + getWidth());
-//        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, getHeight " + getHeight());
-//
-//        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, left " + left);
-//        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, top " + top);
-//        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, right " + right);
-//        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, bottom " + bottom);
-//
-//        layoutDecorated(view, left, top, right, bottom);
-//        if(SHOW_LOGS) Log.v(TAG, "<< layoutInFourthQuadrant");
-//    }
-//
-//    private int findViewCenterY(int previousViewBottom, int halfViewHeight, int viewTop) {
-//        // Right now we need to decrease the angle.
-//        // Because we are in four quadrant. We can decrease from 360 to 270.
-//        /**
-//         *      |
-//         *      |
-//         *------|------
-//         *      |       / We are in this quadrant and going in this way.
-//         *      |  /___/
-//         *         \
-//         */
-//
-//        int viewCenterY;// When we calculate this value for the first time, "view top" is higher than previousViewBottom because it is "container top" and == 0
-//        boolean viewTopIsHigherThenPreviousViewBottom = isViewTopHigherThenPreviousViewBottom(previousViewBottom, viewTop);// && angleDegree < 360 - ANGLE_DELTA /*360 degrees*/;
-//        if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, initial viewTopIsNotAtTheContainerTop " + viewTopIsHigherThenPreviousViewBottom);
-//
-//        // while current "view top" didn't reach the bottom of previous view we decrease the angle and calculate the "top of view"
-//        do {
-//            mFourthQuadrantLastAngle.set(mFourthQuadrantLastAngle.get() - ANGLE_DELTA);
-//            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, new decreased mFourthQuadrantLastAngle " + mFourthQuadrantLastAngle);
-//            double sine = sineInQuadrant(mFourthQuadrantLastAngle.get(), 4);
-//            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, sine " + sine);
-//
-//            viewCenterY = (int) (mOriginY + sine * mRadius);
-//            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, new viewCenterY " + viewCenterY);
-//
-//            viewTop = viewCenterY + (halfViewHeight * getQuadrantSinMultiplier(4));
-//            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, viewTop " + viewTop);
-//
-//            viewTopIsHigherThenPreviousViewBottom = isViewTopHigherThenPreviousViewBottom(previousViewBottom, viewTop);// && angleDegree < 360 - ANGLE_DELTA /*360 degrees*/;
-//            if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, viewTopIsNotAtTheContainerTop " + viewTopIsHigherThenPreviousViewBottom);
-//            if(mFourthQuadrantLastAngle.get() < 270){
-//                if(SHOW_LOGS) Log.v(TAG, "layoutInFourthQuadrant, mFourthQuadrantLastAngle " + mFourthQuadrantLastAngle + ", break");
-//
-////                break;
-//                throw new RuntimeException("angleDegree less then 270");
-//            }
-//        } while (viewTopIsHigherThenPreviousViewBottom);
-//        return viewCenterY;
-//    }
-//
-//    /**
-//     * View top is higher when it's smaller then previous View Bottom
-//     */
-//    private boolean isViewTopHigherThenPreviousViewBottom(int previousViewBottom, int viewTop) {
-//        return viewTop < previousViewBottom;
-//    }
-//
-//    private double cosineInQuadrant(int angleDegree, int quadrant) {
-//        return Math.cos(Math.toRadians(angleDegree));
-//    }
-//
-//
-//    /**
-//     *                          |
-//     *                          |
-//     *       SECOND_QUADRANT    |   FIRST_QUADRANT
-//     *                          |
-//     *                          |
-//     *     -------------------------------------------
-//     *                          |
-//     *       THIRD_QUADRANT     |   FOURTH_QUADRANT
-//     *                          |
-//     *                          |
-//     *                          |
-//     *                          |
-//     */
-//    private int getQuadrantSinMultiplier(int quadrant) {
-//        int quadrantCorrectionMultiplier;
-//        switch (quadrant){
-//            case Circle.FIRST_QUADRANT:
-//                throw new RuntimeException("not handled yet");
-//
-//            case Circle.SECOND_QUADRANT:
-//                throw new RuntimeException("not handled yet");
-//
-//            case Circle.THIRD_QUADRANT:
-//                throw new RuntimeException("not handled yet");
-//
-//            case Circle.FOURTH_QUADRANT:
-//                quadrantCorrectionMultiplier = -1;
-//                break;
-//            default:
-//                throw new RuntimeException("not handled yet");
-//        }
-//        return quadrantCorrectionMultiplier;
-//    }
-//
-//    /**
-//     * This method returns a sine multiplied by correction value.
-//     * We need it because y axis positive direction is down, device wise.
-//     * And in Cartesian coordinate system positive direction is up.
-//     */
-//    private double sineInQuadrant(int angleDegree, int quadrant) {
-//
-//        double correctedSine = Math.sin(Math.toRadians(angleDegree)) * getQuadrantSinMultiplier(quadrant);
-//        if(SHOW_LOGS) Log.v(TAG, String.format("sineInQuadrant, correctedSine %f", correctedSine));
-//        return correctedSine;
-//    }
+    @Override
+    public void incrementFirstVisiblePosition() {
+        mFirstVisiblePosition++;
+    }
+
+    @Override
+    public void incrementLastVisiblePosition() {
+        mLastVisiblePosition++;
+    }
+
+    @Override
+    public void decrementLastVisiblePosition() {
+        mLastVisiblePosition--;
+    }
+
+    @Override
+    public void decrementFirstVisiblePosition() {
+        mFirstVisiblePosition--;
+    }
 }

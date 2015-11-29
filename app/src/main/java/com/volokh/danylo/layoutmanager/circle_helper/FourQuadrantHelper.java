@@ -60,7 +60,7 @@ public class FourQuadrantHelper { // TODO: implements generic quadrant helper
      *     \
      */
     public Point findNextViewCenter(ViewData previousViewData, int nextViewHalfViewWidth, int nextViewHalfViewHeight) {
-        if(SHOW_LOGS) Log.v(TAG, ">> findViewCenter, previousViewData " + previousViewData);
+//        if(SHOW_LOGS) Log.v(TAG, ">> findViewCenter, previousViewData " + previousViewData);
 
         Point previousViewCenter = previousViewData.getCenterPoint();
 
@@ -89,7 +89,7 @@ public class FourQuadrantHelper { // TODO: implements generic quadrant helper
             previousViewCenter = nextViewCenter;
         } while (!foundNextViewCenter);
 
-        if(SHOW_LOGS) Log.v(TAG, "<< findViewCenter, foundNextViewCenter " + foundNextViewCenter);
+//        if(SHOW_LOGS) Log.v(TAG, "<< findViewCenter, foundNextViewCenter " + foundNextViewCenter);
         return nextViewCenter;
     }
 
@@ -99,33 +99,61 @@ public class FourQuadrantHelper { // TODO: implements generic quadrant helper
      *
      * 1. We get an index of previousViewCenter
      * 2. We increment the index.
-     * 3. We get next point using index
+     * 3. Correct received index. We might reach zero of last index
+     * 4. We get next point using index
      *
      */
     private Point getNextViewCenter(Point previousViewCenter) {
 
-        /** 2. */
+        /** 1. */
         int previousViewCenterPointIndex = mCirclePointIndex.get(previousViewCenter);
 
+        /** 2. */
         int newIndex = previousViewCenterPointIndex + 1;
         int lastIndex = mCircleIndexPoint.size() - 1;
+
         /** 3. */
-        int nextViewCenterCenterPointIndex = newIndex > lastIndex ?
+        int nextViewCenterPointIndex = newIndex > lastIndex ?
                 newIndex - lastIndex :
                 newIndex;
 //        if(SHOW_LOGS) Log.v(TAG, "getNextViewCenter, nextViewCenterCenterPointIndex " + nextViewCenterCenterPointIndex);
 
-        /** 5. */
-        Point nextViewCenter = mCircleIndexPoint.get(nextViewCenterCenterPointIndex);
+        /** 4. */
+        Point nextViewCenter = mCircleIndexPoint.get(nextViewCenterPointIndex);
 
 //        if(SHOW_LOGS) Log.v(TAG, "getNextViewCenter, nextViewCenter " + nextViewCenter);
         return nextViewCenter;
     }
 
+    private Point getPreviousViewCenter(Point nextViewCenter) {
+        /** 1. */
+        int nextViewCenterPointIndex = mCirclePointIndex.get(nextViewCenter);
+        if(SHOW_LOGS) Log.v(TAG, "getPreviousViewCenter, nextViewCenterPointIndex " + nextViewCenterPointIndex);
+
+        /** 2. */
+        int newIndex = nextViewCenterPointIndex - 1;
+        if(SHOW_LOGS) Log.v(TAG, "getPreviousViewCenter, newIndex " + newIndex);
+
+        int lastIndex = mCircleIndexPoint.size() - 1;
+        if(SHOW_LOGS) Log.v(TAG, "getPreviousViewCenter, lastIndex " + lastIndex);
+
+        /** 3. */
+        int previousViewCenterPointIndex = newIndex < 0 ?
+                lastIndex + newIndex: // this will subtract newIndex from last index
+                newIndex;
+        if(SHOW_LOGS) Log.v(TAG, "getPreviousViewCenter, previousViewCenterPointIndex " + previousViewCenterPointIndex);
+
+        /** 4. */
+        Point previousViewCenter = mCircleIndexPoint.get(previousViewCenterPointIndex);
+
+//        if(SHOW_LOGS) Log.v(TAG, "getNextViewCenter, nextViewCenter " + nextViewCenter);
+        return previousViewCenter;
+    }
+
     public int getViewCenterPointIndex(Point point) {
 
         int viewCenterPointIndex = mCirclePointIndex.get(point);
-        if(SHOW_LOGS) Log.v(TAG, "findViewCenter, viewCenterPointIndex " + viewCenterPointIndex);
+//        if(SHOW_LOGS) Log.v(TAG, "findViewCenter, viewCenterPointIndex " + viewCenterPointIndex);
 
         return viewCenterPointIndex;
     }
@@ -137,9 +165,9 @@ public class FourQuadrantHelper { // TODO: implements generic quadrant helper
     }
 
     public int getNewCenterPointIndex(int newCalculatedIndex) {
-        if(SHOW_LOGS) Log.v(TAG, ">> getNewCenterPointIndex, newCalculatedIndex " + newCalculatedIndex);
-        if(SHOW_LOGS) Log.v(TAG, "getNewCenterPointIndex, mCirclePointIndex.size() " + mCirclePointIndex.size());
-        if(SHOW_LOGS) Log.v(TAG, "getNewCenterPointIndex, mCircleIndexPoint.size() " + mCircleIndexPoint.size());
+//        if(SHOW_LOGS) Log.v(TAG, ">> getNewCenterPointIndex, newCalculatedIndex " + newCalculatedIndex);
+//        if(SHOW_LOGS) Log.v(TAG, "getNewCenterPointIndex, mCirclePointIndex.size() " + mCirclePointIndex.size());
+//        if(SHOW_LOGS) Log.v(TAG, "getNewCenterPointIndex, mCircleIndexPoint.size() " + mCircleIndexPoint.size());
 
         int lastIndex = mCircleIndexPoint.size() - 1;
         int correctedIndex;
@@ -150,8 +178,42 @@ public class FourQuadrantHelper { // TODO: implements generic quadrant helper
                     newCalculatedIndex - lastIndex :
                     newCalculatedIndex;
         }
-        if(SHOW_LOGS) Log.v(TAG, "<< getNewCenterPointIndex, correctedIndex " + correctedIndex);
+//        if(SHOW_LOGS) Log.v(TAG, "<< getNewCenterPointIndex, correctedIndex " + correctedIndex);
 
         return correctedIndex;
     }
+
+    public Point findPreviousViewCenter(ViewData nextViewData, int previousViewHalfViewWidth, int previousViewHalfViewHeight) {
+        //        if(SHOW_LOGS) Log.v(TAG, ">> findViewCenter, previousViewData " + previousViewData);
+
+        Point nextViewCenter = nextViewData.getCenterPoint();
+
+        Point previousViewCenter;
+
+        boolean foundNextViewCenter;
+        do {
+
+            previousViewCenter = getPreviousViewCenter(nextViewCenter);
+
+//            int previousViewTop = previousViewCenter.getY() - previousViewHalfViewHeight;
+
+            int previousViewBottom = previousViewCenter.getY() + previousViewHalfViewHeight;
+
+//            int previousViewRight = previousViewCenter.getX() + previousViewHalfViewWidth;
+
+            if(SHOW_LOGS) Log.v(TAG, "findPreviousViewCenter, nextViewData.getViewTop() " + nextViewData.getViewTop());
+            if(SHOW_LOGS) Log.v(TAG, "findPreviousViewCenter, previousViewBottom " + previousViewBottom);
+
+            boolean previousViewBottomIsAboveNextViewTop = previousViewBottom < nextViewData.getViewTop();
+
+            foundNextViewCenter = previousViewBottomIsAboveNextViewTop;
+
+            // "previous view center" become next
+            nextViewCenter = previousViewCenter;
+        } while (!foundNextViewCenter);
+
+        if(SHOW_LOGS) Log.v(TAG, "<< findPreviousViewCenter, findPreviousViewCenter " + foundNextViewCenter);
+        return nextViewCenter;
+    }
+
 }

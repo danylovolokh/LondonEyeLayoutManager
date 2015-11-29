@@ -53,10 +53,10 @@ public class MainActivity extends ActionBarActivity {
                 "Passenger Cabin 3",
                 "Passenger Cabin 4",
                 "Passenger Cabin 5",
-                "Passenger Cabin 6"/*,
+                "Passenger Cabin 6",
                 "Passenger Cabin 7",
                 "Passenger Cabin 8",
-                "Passenger Cabin 9",
+                "Passenger Cabin 9"/*,
                 "Passenger Cabin 10",
                 "Passenger Cabin 11",
                 "Passenger Cabin 12",
@@ -83,7 +83,7 @@ public class MainActivity extends ActionBarActivity {
 
             int screenWidth = getActivity().getResources().getDisplayMetrics().widthPixels;
 
-            int circleRadius = screenWidth;
+            int circleRadius = screenWidth - 200;
 
             mRecyclerView = (DebugRecyclerView) rootView.findViewById(R.id.recycler_view);
             mRecyclerView.setRadius(circleRadius);

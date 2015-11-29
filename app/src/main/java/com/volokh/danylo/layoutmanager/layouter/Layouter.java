@@ -79,27 +79,35 @@ public class Layouter {
      * TODO : If we don't find a suitable point below we try to find it to the left of previous view left
      *
      */
-    public ViewData layoutView(View view, ViewData previousViewData) {
-        if (SHOW_LOGS)Log.v(TAG, ">> layoutView, previousViewData " + previousViewData);
+    public ViewData layoutViewNextView(View view, ViewData previousViewData) {
+        if (SHOW_LOGS)Log.v(TAG, ">> layoutViewNextView, previousViewData " + previousViewData);
 
-        // TODO: move it up from here
-        if(previousViewData == null){
-            previousViewData = new ViewData(0, 0, 0, 0,
-                    mQuadrantHelper.getViewCenterPoint(0)
-            );
-        }
         Pair<Integer, Integer> halfWidthHeight = mCallback.getHalfWidthHeightPair(view);
 
         Point viewCenter = mQuadrantHelper.findNextViewCenter(previousViewData, halfWidthHeight.first, halfWidthHeight.second);
-        if (SHOW_LOGS) Log.v(TAG, "layoutView, viewCenter " + viewCenter);
+        if (SHOW_LOGS) Log.v(TAG, "layoutViewNextView, viewCenter " + viewCenter);
 
         performLayout(view, viewCenter, halfWidthHeight.first, halfWidthHeight.second);
         previousViewData.updateData(view, viewCenter);
 
-        if (SHOW_LOGS) Log.v(TAG, "<< layoutView");
+        if (SHOW_LOGS) Log.v(TAG, "<< layoutViewNextView");
         return previousViewData;
     }
 
+    public ViewData layoutViewPreviousView(View view, ViewData previousViewData) {
+        if (SHOW_LOGS)Log.v(TAG, ">> layoutViewPreviousView, previousViewData " + previousViewData);
+
+        Pair<Integer, Integer> halfWidthHeight = mCallback.getHalfWidthHeightPair(view);
+
+        Point viewCenter = mQuadrantHelper.findPreviousViewCenter(previousViewData, halfWidthHeight.first, halfWidthHeight.second);
+        if (SHOW_LOGS) Log.v(TAG, "layoutViewPreviousView, viewCenter " + viewCenter);
+
+        performLayout(view, viewCenter, halfWidthHeight.first, halfWidthHeight.second);
+        previousViewData.updateData(view, viewCenter);
+
+        if (SHOW_LOGS) Log.v(TAG, "<< layoutViewPreviousView");
+        return previousViewData;
+    }
     private void performLayout(View view, Point viewCenter, int halfViewWidth, int halfViewHeight) {
         if (SHOW_LOGS) Log.i(TAG, "performLayout, final viewCenter " + viewCenter);
 

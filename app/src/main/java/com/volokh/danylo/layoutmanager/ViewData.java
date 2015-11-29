@@ -24,7 +24,7 @@ public class ViewData {
     private int mViewLeft;
     private int mViewRight;
 
-    private boolean mIsViewVisible;
+    private boolean mIsViewVisible; // TODO: remove it
     private Point mViewCenter;
 
     public ViewData(int viewTop, int viewBottom, int viewLeft, int viewRight, Point viewCenter) {

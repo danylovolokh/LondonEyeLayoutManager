@@ -21,4 +21,18 @@ public interface ScrollHandlerCallback {
     int getLastVisiblePosition();
 
     int getItemCount();
+
+    void removeView(View view);
+
+    void incrementFirstVisiblePosition();
+
+    void incrementLastVisiblePosition();
+
+    void addView(View view);
+
+    void decrementLastVisiblePosition();
+
+    void decrementFirstVisiblePosition();
+
+    void addView(View newFirstView, int position);
 }
