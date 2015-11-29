@@ -6,7 +6,7 @@ package com.volokh.danylo.layoutmanager.scroller;
  *
  */
 public interface ScrollHandler {
-    void scrollVerticallyBy(int dy);
+    int scrollVerticallyBy(int dy);
 
     boolean canScroll();
 }

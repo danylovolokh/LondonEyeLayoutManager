@@ -11,7 +11,7 @@ import com.volokh.danylo.layoutmanager.circle_helper.UpdatablePoint;
 
 /**
  * Created by danylo.volokh on 28.11.2015.
- * TODO: specify 4th quadrant specific stuff
+ * TODO: specify 1st quadrant specific stuff
  */
 public class PixelPerfectScrollHandler implements ScrollHandler {
 
@@ -73,50 +73,43 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
 
 
     @Override
-    public void scrollVerticallyBy(int dy) {
+    public int scrollVerticallyBy(int dy) {
+        View firstView = mCallback.getChildAt(0);
+        View lastView = mCallback.getChildAt(
+                mCallback.getChildCount()-1
+        );
+        boolean topBoundReached = isTopBoundReached(firstView);
+        boolean bottomBoundReached = isBottomBoundReached(lastView);
 
-        boolean topBoundReached = isTopBoundReached();
-        if (SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy, topBoundReached " + topBoundReached);
+        if (SHOW_LOGS) Log.v(TAG, "scrolscrollVerticallyBy, topBoundReached " + topBoundReached);
+        if (SHOW_LOGS) Log.v(TAG, "scrolscrollVerticallyBy, bottomBoundReached " + bottomBoundReached);
+        if (SHOW_LOGS) Log.v(TAG, "scrolscrollVerticallyBy, dy " + dy);
 
         int delta;
-
         if (dy > 0) { // Contents are scrolling up
             //Check against bottom bound
-//            if (bottomBoundReached) {
-//                //If we've reached the last row, enforce limits
-//                int bottomOffset;
-//                if (rowOfIndex(getChildCount() - 1) >= (maxRowCount - 1)) {
-//                    //We are truly at the bottom, determine how far
-//                    bottomOffset = getVerticalSpace() - getDecoratedBottom(bottomView)
-//                            + getPaddingBottom();
-//                } else {
-//                /*
-//                 * Extra space added to account for allowing bottom space in the grid.
-//                 * This occurs when the overlap in the last row is not large enough to
-//                 * ensure that at least one element in that row isn't fully recycled.
-//                 */
-//                    bottomOffset = getVerticalSpace() - (getDecoratedBottom(bottomView)
-//                            + mDecoratedChildHeight) + getPaddingBottom();
-//                }
-//                delta = Math.max(-dy, bottomOffset);
-//            } else {
-//                //No limits while the last row isn't visible
-//                delta = -dy;
-//            }
+            if (bottomBoundReached) {
+                //If we've reached the last row, enforce limits
+                int bottomOffset = getBottomOffset(lastView);
+                delta = Math.max(-dy, bottomOffset);
+            } else {
+                //No limits while the last row isn't visible
+                delta = -dy;
+            }
         } else { // Contents are scrolling down
             //Check against top bound
-//            if (topBoundReached) {
-//                int topOffset = -getDecoratedTop(topView) + getPaddingTop();
-//                delta = Math.min(-dy, topOffset);
-//            } else {
-//                delta = -dy;
-//            }
+            if (topBoundReached) {
+                int topOffset = -mCallback.getDecoratedTop(firstView) + mCallback.getPaddingTop();
+                delta = Math.min(-dy, topOffset);
+            } else {
+                delta = -dy;
+            }
         }
+//        if (SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy, delta " + delta);
 
-        View firstView = mCallback.getChildAt(0);
-        Point firstViewNewCenter = scrollFirstViewVerticallyBy(firstView, -dy);
+        Point firstViewNewCenter = scrollFirstViewVerticallyBy(firstView, delta);
 
-        if (SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy, firstViewNewCenter " + firstViewNewCenter);
+//        if (SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy, firstViewNewCenter " + firstViewNewCenter);
 
         ViewData previousViewData = new ViewData(
                 firstView.getTop(),
@@ -132,49 +125,144 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
             int right = view.getRight();
             int top = view.getTop();
 
-            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy right " + right);
-            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy top " + top);
+//            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy right " + right);
+//            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy top " + top);
 
             int width = view.getWidth();
             int height = view.getHeight();
 
-            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy width " + width);
-            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy height " + height);
+//            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy width " + width);
+//            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy height " + height);
 
             // TODO: this is old center point. No need to get it by index
             int viewCenterX = view.getRight() - view.getWidth()/2;
             int viewCenterY = view.getTop() + view.getHeight()/2;
 
-            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy viewCenterX " + viewCenterX);
-            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy viewCenterY " + viewCenterY);
+//            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy viewCenterX " + viewCenterX);
+//            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy viewCenterY " + viewCenterY);
 
             SCROLL_HELPER_POINT.update(viewCenterX, viewCenterY);
 
             int centerPointIndex = mQuadrantHelper.getViewCenterPointIndex(SCROLL_HELPER_POINT);
 
             Point oldCenterPoint = mQuadrantHelper.getViewCenterPoint(centerPointIndex);
-            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy oldCenterPoint " + oldCenterPoint);
+//            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy oldCenterPoint " + oldCenterPoint);
 
             Point newCenterPoint = mQuadrantHelper.findNextViewCenter(previousViewData, width/2, height/2);
-            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy newCenterPoint " + newCenterPoint);
+//            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy newCenterPoint " + newCenterPoint);
 
             int dX = newCenterPoint.getX() - oldCenterPoint.getX();
             int dY = newCenterPoint.getY() - oldCenterPoint.getY();
-            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy dX " + dX);
-            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy dY " + dY);
+//            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy dX " + dX);
+//            if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy dY " + dY);
 
             view.offsetTopAndBottom(dY);
             view.offsetLeftAndRight(dX);
 
             previousViewData.updateData(view, newCenterPoint);
         }
+        return -delta;
     }
 
-    private boolean isTopBoundReached() {
+    private int getBottomOffset(View lastView) {
+        int bottomOffset;
+
+        int recyclerHeight = mCallback.getHeight();
+        if (SHOW_LOGS) Log.v(TAG, "getBottomOffset, recyclerHeight " + recyclerHeight);
+
+        if (recyclerHeight > mRadius) {
+            /** mean that circle is hiding behind the left edge
+             *   ___________
+             *  |        |  |
+             *  |        |  |
+             *  |      _/   |
+             *  |_____/     |
+             *  |           |
+             *  |           |
+             *  |           |
+             *  |___________|
+             *
+             */
+            bottomOffset = lastView.getLeft();
+
+        } else {
+            /** mean that circle is hiding behind the bottom edge
+             *   ___________
+             *  |     \     |
+             *  |       \   |
+             *  |        |  |
+             *  |        |  |
+             *  |        |  |
+             *  |        |  |
+             *  |       /   |
+             *  |_____/_____|
+             *
+             */
+
+            int lastViewBottom = lastView.getBottom();
+            if (SHOW_LOGS) Log.v(TAG, "getBottomOffset lastViewBottom " + lastViewBottom);
+            bottomOffset = lastViewBottom - recyclerHeight;
+        }
+        if (SHOW_LOGS) Log.v(TAG, "getBottomOffset,  " + bottomOffset);
+        return bottomOffset;
+    }
+
+    private boolean isBottomBoundReached(View lastView) {
+        int lastVisiblePosition = mCallback.getLastVisiblePosition();
+        boolean isBottomBoundReached;
+
+        if(lastVisiblePosition == mCallback.getItemCount()){
+
+
+            int recyclerHeight = mCallback.getHeight();
+            if(SHOW_LOGS) Log.v(TAG, "isBottomBoundReached, recyclerHeight " + recyclerHeight);
+
+            if(recyclerHeight > mRadius){
+                /** mean that circle is hiding behind the left edge
+                 *   ___________
+                 *  |        |  |
+                 *  |        |  |
+                 *  |      _/   |
+                 *  |_____/     |
+                 *  |           |
+                 *  |           |
+                 *  |           |
+                 *  |___________|
+                 *
+                 */
+                int spaceToLeftEdge = lastView.getLeft();
+                if(SHOW_LOGS) Log.v(TAG, "isBottomBoundReached spaceToLeftEdge " + spaceToLeftEdge);
+                isBottomBoundReached = spaceToLeftEdge >= 0;
+
+            } else {
+                /** mean that circle is hiding behind the bottom edge
+                 *   ___________
+                 *  |     \     |
+                 *  |       \   |
+                 *  |        |  |
+                 *  |        |  |
+                 *  |        |  |
+                 *  |        |  |
+                 *  |       /   |
+                 *  |_____/_____|
+                 *
+                 */
+
+                int lastViewBottom = lastView.getBottom();
+                if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy lastViewBottom " + lastViewBottom);
+                isBottomBoundReached = lastViewBottom <= recyclerHeight;
+            }
+            if(SHOW_LOGS) Log.v(TAG, "isBottomBoundReached " + isBottomBoundReached);
+        } else {
+            isBottomBoundReached = false;
+        }
+        return isBottomBoundReached;
+    }
+
+    private boolean isTopBoundReached(View firstView) {
         int firstVisiblePosition = mCallback.getFirstVisiblePosition();
         boolean isTopBoundReached;
         if(firstVisiblePosition == 0){
-            View firstView = mCallback.getChildAt(0);
             int top = firstView.getTop();
             isTopBoundReached = top >= 0;
         } else {

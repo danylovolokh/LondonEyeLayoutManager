@@ -123,7 +123,6 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
         mRecyclerView = recyclerView;
 
-        requestLayout(); // TODO: check if I need this. Probably it is causing multiple layout first time
         FourQuadrantHelper quadrantHelper = new FourQuadrantHelper(mRadius, 0, 0);
 
         mLayouter = new Layouter(this, mRadius, quadrantHelper); // TODO: get from constructor
@@ -169,11 +168,11 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 //        }
 
 //        if(mHold < 2){
-        mScroller.scrollVerticallyBy(dy);
+        int delta = mScroller.scrollVerticallyBy(dy);
 //            mHold++;
 //        }
 
-        return dy;
+        return delta;
     }
 
     @Override
@@ -303,6 +302,11 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
     @Override
     public int getFirstVisiblePosition() {
         return mFirstVisiblePosition;
+    }
+
+    @Override
+    public int getLastVisiblePosition() {
+        return mLastVisiblePosition;
     }
 
 //    /**

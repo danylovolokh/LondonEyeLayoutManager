@@ -13,4 +13,12 @@ public interface ScrollHandlerCallback {
     int getHeight();
 
     int getFirstVisiblePosition();
+
+    int getDecoratedTop(View view);
+
+    int getPaddingTop();
+
+    int getLastVisiblePosition();
+
+    int getItemCount();
 }
