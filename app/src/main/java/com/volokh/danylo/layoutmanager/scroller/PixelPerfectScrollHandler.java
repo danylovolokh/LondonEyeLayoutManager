@@ -147,35 +147,40 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
 
         } else {
             recycleBottomIfNeeded(lastView, recycler);
+            addTopIfNeeded(firstView, recycler);
+        }
+    }
 
-            int topOffset = firstView.getTop();
-            if(SHOW_LOGS) Log.v(TAG, "performRecycling, topOffset " + topOffset);
+    private void addTopIfNeeded(View firstView, RecyclerView.Recycler recycler) {
+        int topOffset = firstView.getTop();
+        if(SHOW_LOGS) Log.v(TAG, "addTopIfNeeded, topOffset " + topOffset);
 
-            if(topOffset >= 0){
-                int firstVisiblePosition = mCallback.getFirstVisiblePosition();
+        if(topOffset >= 0){
+            int firstVisiblePosition = mCallback.getFirstVisiblePosition();
 
-                if(SHOW_LOGS) Log.v(TAG, "performRecycling, firstVisiblePosition " + firstVisiblePosition);
+            if(SHOW_LOGS) Log.v(TAG, "addTopIfNeeded, firstVisiblePosition " + firstVisiblePosition);
 
-                if(firstVisiblePosition > 0){
-                    View newFirstView = recycler.getViewForPosition(firstVisiblePosition - 1);
+            if(firstVisiblePosition > 0){
+                if(SHOW_LOGS) Log.i(TAG, "addTopIfNeeded, add to top");
 
-                    int viewCenterX = firstView.getRight() - firstView.getWidth()/2;
-                    int viewCenterY = firstView.getTop() + firstView.getHeight()/2;
-                    SCROLL_HELPER_POINT.update(viewCenterX, viewCenterY);
+                View newFirstView = recycler.getViewForPosition(firstVisiblePosition - 1);
 
-                    ViewData previousViewData = new ViewData(
-                            firstView.getTop(),
-                            firstView.getBottom(),
-                            firstView.getLeft(),
-                            firstView.getRight(),
-                            SCROLL_HELPER_POINT
-                    );
-                    mCallback.addView(newFirstView, 0);
-                    mLayouter.layoutViewPreviousView(newFirstView, previousViewData);
-                    mCallback.decrementFirstVisiblePosition();
-                } else {
-                    // this is first view there is no views to add to the top
-                }
+                int viewCenterX = firstView.getRight() - firstView.getWidth()/2;
+                int viewCenterY = firstView.getTop() + firstView.getHeight()/2;
+                SCROLL_HELPER_POINT.update(viewCenterX, viewCenterY);
+
+                ViewData previousViewData = new ViewData(
+                        firstView.getTop(),
+                        firstView.getBottom(),
+                        firstView.getLeft(),
+                        firstView.getRight(),
+                        SCROLL_HELPER_POINT
+                );
+                mCallback.addView(newFirstView, 0);
+                mLayouter.layoutViewPreviousView(newFirstView, previousViewData);
+                mCallback.decrementFirstVisiblePosition();
+            } else {
+                // this is first view there is no views to add to the top
             }
         }
     }
@@ -189,7 +194,7 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
 
         boolean lastViewIsVisible;
         int recyclerViewHeight = mCallback.getHeight();
-        boolean overScrollExceededViewSize;
+        boolean isEnoughOverScrollForRecycling;
         if (recyclerViewHeight > mRadius) {
             /** mean that circle is hiding behind the left edge
              *   ___________
@@ -208,7 +213,17 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
 
             lastViewIsVisible = right >= 0;
             if (SHOW_LOGS) Log.v(TAG, "recycleBottomIfNeeded lastViewIsVisible " + lastViewIsVisible);
-            overScrollExceededViewSize = Math.abs(right) > lastView.getWidth();
+            int viewCenterX = lastView.getRight() - lastView.getWidth()/2;
+
+            isEnoughOverScrollForRecycling =
+                    // This check handles small views: view width is smaller then radius.
+                    // It will help us recycle views early. Right after it exceeded screen bound
+                    Math.abs(right) > lastView.getWidth() ||
+
+                    // This check handles large views: view width is bigger then radius.
+                    // We might have a case where view width is as big as diameter.
+                    // It will be recycled only when view center will be on the distance of circle radius
+                    Math.abs(viewCenterX) > mRadius/2;
 
         } else {
             /** mean that circle is hiding behind the bottom edge
@@ -227,15 +242,17 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
             int lastViewBottom = lastView.getBottom();
             if (SHOW_LOGS) Log.v(TAG, "recycleBottomIfNeeded lastViewBottom " + lastViewBottom);
             lastViewIsVisible = lastViewBottom - recyclerViewHeight > 0;
-            overScrollExceededViewSize = Math.abs(lastViewBottom) > lastView.getHeight();
+            isEnoughOverScrollForRecycling = Math.abs(lastViewBottom) > lastView.getHeight();
         }
         if (SHOW_LOGS) Log.v(TAG, "recycleBottomIfNeeded lastViewIsVisible " + lastViewIsVisible);
-        if (SHOW_LOGS) Log.v(TAG, "recycleBottomIfNeeded overScrollExceededViewSize " + overScrollExceededViewSize);
+        if (SHOW_LOGS) Log.v(TAG, "recycleBottomIfNeeded isEnoughOverScrollForRecycling " + isEnoughOverScrollForRecycling);
 
-        boolean lastViewShouldBeRecycled = !lastViewIsVisible && overScrollExceededViewSize;
+        boolean lastViewShouldBeRecycled = !lastViewIsVisible && isEnoughOverScrollForRecycling;
         if (SHOW_LOGS) Log.v(TAG, "recycleBottomIfNeeded lastViewShouldBeRecycled " + lastViewShouldBeRecycled);
 
         if(lastViewShouldBeRecycled){
+            if(SHOW_LOGS) Log.i(TAG, "recycleTopIfNeeded, recycling bottom view");
+
             mCallback.removeView(lastView);
             mCallback.decrementLastVisiblePosition();
             recycler.recycleView(lastView);
@@ -255,6 +272,8 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
             if(SHOW_LOGS) Log.v(TAG, "addToBottomIfNeeded, nextPosition " + nextPosition);
 
             if(nextPosition <= itemCount){
+                if(SHOW_LOGS) Log.i(TAG, "addToBottomIfNeeded, add new view to bottom");
+
                 View newLastView = recycler.getViewForPosition(nextPosition - 1);
 
                 int viewCenterX = lastView.getRight() - lastView.getWidth()/2;
@@ -292,6 +311,8 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
 
         if(needRecycling){
             // first view is hidden
+            if(SHOW_LOGS) Log.i(TAG, "recycleTopIfNeeded, recycling first view");
+
             mCallback.removeView(firstView);
             mCallback.incrementFirstVisiblePosition();
             recycler.recycleView(firstView);

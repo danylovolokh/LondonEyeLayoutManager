@@ -35,11 +35,6 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
 
     /**
-     * If this is set to "true" we will calculate size of capsules only once.
-     * It is some sort of optimization
-     */
-    private boolean mHasFixedSizeCapsules;
-    /**
      * This is a helper value. We should always return "true" from {@link #canScrollVertically()}
      * and {@link #canScrollHorizontally()} but we need to change this value to false when measuring a child view size.
      * This is because the width "match_parent" is not calculated correctly if {@link #canScrollHorizontally()} returns "true"
@@ -61,45 +56,33 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
     public Pair<Integer, Integer> getHalfWidthHeightPair(View view) {
 
         Pair<Integer, Integer> widthHeight;
-        if (mHasFixedSizeCapsules) {
-            // this is an optimization
-            if (mHalfDecoratedCapsuleWidth == 0 || mHalfDecoratedCapsuleHeight == 0) {
-                throw new RuntimeException("mHalfDecoratedCapsuleWidth " + mHalfDecoratedCapsuleWidth + ", mHalfDecoratedCapsuleHeight " + mHalfDecoratedCapsuleHeight + ", values should be calculated earlier");
-            }
-            widthHeight = new Pair<>(
-                    mHalfDecoratedCapsuleWidth,
-                    mHalfDecoratedCapsuleHeight
-            );
-            if(SHOW_LOGS) Log.i(TAG, "getHalfWidthHeightPair, mHalfDecoratedCapsuleWidth " + mHalfDecoratedCapsuleWidth + ", mHalfDecoratedCapsuleHeight " + mHalfDecoratedCapsuleHeight);
+        measureChildWithMargins(view, 0, 0);
 
-        } else {
-            measureChildWithMargins(view, 0, 0);
+        int measuredWidth = getDecoratedMeasuredWidth(view);
+        int measuredHeight = getDecoratedMeasuredHeight(view);
 
-            int measuredWidth = getDecoratedMeasuredWidth(view);
-            int measuredHeight = getDecoratedMeasuredHeight(view);
+        if (SHOW_LOGS)
+            Log.i(TAG, "getHalfWidthHeightPair, measuredWidth " + measuredWidth + ", measuredHeight " + measuredHeight);
 
-            int diameter = mRadius*2;
+        int diameter = mRadius*2;
 
-            if(SHOW_LOGS) Log.i(TAG, "getHalfWidthHeightPair, measuredWidth " + measuredWidth + ", measuredHeight " + measuredHeight);
-
-            if(measuredWidth > diameter || measuredHeight > diameter){
-                throw new RuntimeException("View size is bigger than diameter. " +
-                        "\nWe are unable to layout multiple views. " +
-                        "\nDefine a better algorithm and let us know :)" +
-                        "\n, measuredWidth " + measuredWidth + ", measuredHeight " + measuredHeight + ", diameter " + diameter);
-            }
-
-            int halfViewHeight = measuredHeight / 2;
-            if (SHOW_LOGS) Log.v(TAG, "getHalfWidthHeightPair, halfViewHeight " + halfViewHeight);
-
-            int halfViewWidth = measuredWidth / 2;
-            if (SHOW_LOGS) Log.v(TAG, "getHalfWidthHeightPair, halfViewWidth " + halfViewWidth);
-
-            widthHeight = new Pair<>(
-                    halfViewWidth,
-                    halfViewHeight
-            );
+        if (measuredWidth > diameter || measuredHeight > diameter) {
+            throw new RuntimeException("View size is bigger than diameter. " +
+                    "\nWe are unable to layout multiple views. " +
+                    "\nDefine a better algorithm and let us know :)" +
+                    "\n, measuredWidth " + measuredWidth + ", measuredHeight " + measuredHeight + ", diameter " + diameter);
         }
+
+        int halfViewHeight = measuredHeight / 2;
+        if (SHOW_LOGS) Log.v(TAG, "getHalfWidthHeightPair, halfViewHeight " + halfViewHeight);
+
+        int halfViewWidth = measuredWidth / 2;
+        if (SHOW_LOGS) Log.v(TAG, "getHalfWidthHeightPair, halfViewWidth " + halfViewWidth);
+
+        widthHeight = new Pair<>(
+                halfViewWidth,
+                halfViewHeight
+        );
         return widthHeight;
     }
 
@@ -128,11 +111,6 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
         mLayouter = new Layouter(this, mRadius, mQuadrantHelper); // TODO: get from constructor
         mScroller = new PixelPerfectScrollHandler(this, mRadius, mQuadrantHelper, mLayouter); // TODO: use strategy for this
-    }
-
-    public void setHasFixedSizeCapsules(boolean hasFixedSizeCapsules){
-        // TODO: find a usage for this?
-        mHasFixedSizeCapsules = hasFixedSizeCapsules;
     }
 
     @Override
@@ -200,13 +178,6 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
         mLastVisiblePosition = 0;
         mFirstVisiblePosition = 0;
 
-        if(mHasFixedSizeCapsules){
-            // perform an optimization. If mHasFixedSizeCapsules == true we will calculate a size of views only once
-            if(mHalfDecoratedCapsuleHeight == 0 && mHalfDecoratedCapsuleWidth == 0){
-                calculateCapsuleHalfWidthHeight(recycler);
-            }
-        }
-
         mCurrentViewPosition = 0;
 
         if(SHOW_LOGS) {
@@ -238,37 +209,6 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
         } while (!isLastLayoutedView && mLastVisiblePosition < itemCount);
 
         if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, mLastVisiblePosition " + mLastVisiblePosition);
-    }
-
-    // TODO: move it to layout-er
-    private void calculateCapsuleHalfWidthHeight(RecyclerView.Recycler recycler) {
-        if(SHOW_LOGS) Log.v(TAG, ">> calculateCapsuleHalfWidthHeight");
-
-        //Scrap measure one child
-        View recycledCapsule = recycler.getViewForPosition(0);
-        if(SHOW_LOGS) Log.v(TAG, "calculateCapsuleHalfWidthHeight recycledCapsule " + recycledCapsule);
-
-        addView(recycledCapsule);
-
-        if(SHOW_LOGS) Log.v(TAG, "calculateCapsuleHalfWidthHeight recycledCapsule.left " + recycledCapsule.getLeft());
-        if(SHOW_LOGS) Log.v(TAG, "calculateCapsuleHalfWidthHeight recycledCapsule.right " + recycledCapsule.getRight());
-
-
-        measureChildWithMargins(recycledCapsule, 0, 0);
-
-        /*
-         * We make some assumptions in this code based on every child
-         * view being the same size (i.e. a uniform grid). This allows
-         * us to compute the following values up front because they
-         * won't change.
-         */
-
-        mHalfDecoratedCapsuleWidth = getDecoratedMeasuredWidth(recycledCapsule) / 2;
-        mHalfDecoratedCapsuleHeight = getDecoratedMeasuredHeight(recycledCapsule) / 2;
-
-        removeAndRecycleAllViews(recycler);
-
-        if(SHOW_LOGS) Log.v(TAG, "<< calculateCapsuleHalfWidthHeight, mHalfDecoratedCapsuleWidth " + mHalfDecoratedCapsuleWidth + ", mHalfDecoratedCapsuleHeight " + mHalfDecoratedCapsuleHeight);
     }
 
     /**

@@ -56,7 +56,7 @@ public class MainActivity extends ActionBarActivity {
                 "Passenger Cabin 6",
                 "Passenger Cabin 7",
                 "Passenger Cabin 8",
-                "Passenger Cabin 9"/*,
+                "Passenger Cabin 9",
                 "Passenger Cabin 10",
                 "Passenger Cabin 11",
                 "Passenger Cabin 12",
@@ -65,7 +65,25 @@ public class MainActivity extends ActionBarActivity {
                 "Passenger Cabin 15",
                 "Passenger Cabin 16",
                 "Passenger Cabin 17",
-                "Passenger Cabin 18"*/));
+                "Passenger Cabin 18",
+                "Passenger Cabin 19",
+                "Passenger Cabin 20",
+                "Passenger Cabin 21",
+                "Passenger Cabin 22",
+                "Passenger Cabin 23",
+                "Passenger Cabin 24",
+                "Passenger Cabin 25",
+                "Passenger Cabin 26",
+                "Passenger Cabin 27",
+                "Passenger Cabin 28",
+                "Passenger Cabin 29",
+                "Passenger Cabin 30",
+                "Passenger Cabin 31",
+                "Passenger Cabin 32",
+                "Passenger Cabin 33",
+                "Passenger Cabin 34",
+                "Passenger Cabin 35",
+                "Passenger Cabin 36"));
 
         private DebugRecyclerView mRecyclerView;
 
