@@ -107,8 +107,13 @@ public class FourQuadrantHelper { // TODO: implements generic quadrant helper
         /** 2. */
         int previousViewCenterPointIndex = mCirclePointIndex.get(previousViewCenter);
 
+        int newIndex = previousViewCenterPointIndex + 1;
+        int lastIndex = mCircleIndexPoint.size() - 1;
         /** 3. */
-        int nextViewCenterCenterPointIndex = previousViewCenterPointIndex + 1;
+        int nextViewCenterCenterPointIndex = newIndex > lastIndex ?
+                newIndex - lastIndex :
+                newIndex;
+//        if(SHOW_LOGS) Log.v(TAG, "getNextViewCenter, nextViewCenterCenterPointIndex " + nextViewCenterCenterPointIndex);
 
         /** 5. */
         Point nextViewCenter = mCircleIndexPoint.get(nextViewCenterCenterPointIndex);
@@ -129,5 +134,24 @@ public class FourQuadrantHelper { // TODO: implements generic quadrant helper
         return mCircleIndexPoint.get(
                 newCenterPointIndex
         );
+    }
+
+    public int getNewCenterPointIndex(int newCalculatedIndex) {
+        if(SHOW_LOGS) Log.v(TAG, ">> getNewCenterPointIndex, newCalculatedIndex " + newCalculatedIndex);
+        if(SHOW_LOGS) Log.v(TAG, "getNewCenterPointIndex, mCirclePointIndex.size() " + mCirclePointIndex.size());
+        if(SHOW_LOGS) Log.v(TAG, "getNewCenterPointIndex, mCircleIndexPoint.size() " + mCircleIndexPoint.size());
+
+        int lastIndex = mCircleIndexPoint.size() - 1;
+        int correctedIndex;
+        if(newCalculatedIndex < 0){
+            correctedIndex = lastIndex + newCalculatedIndex;
+        } else {
+            correctedIndex = newCalculatedIndex > lastIndex ?
+                    newCalculatedIndex - lastIndex :
+                    newCalculatedIndex;
+        }
+        if(SHOW_LOGS) Log.v(TAG, "<< getNewCenterPointIndex, correctedIndex " + correctedIndex);
+
+        return correctedIndex;
     }
 }

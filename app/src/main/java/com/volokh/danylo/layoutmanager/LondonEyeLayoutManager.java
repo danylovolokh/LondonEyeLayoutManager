@@ -163,10 +163,10 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
         }
 
         //Optimize the case where the entire data set is too small to scroll
-        boolean canScroll = mScroller.canScroll();
-        if(!canScroll){
-            return 0;
-        }
+//        boolean canScroll = mScroller.canScroll();
+//        if(!canScroll){
+//            return 0;
+//        }
 
 //        if(mHold < 2){
         mScroller.scrollVerticallyBy(dy);
