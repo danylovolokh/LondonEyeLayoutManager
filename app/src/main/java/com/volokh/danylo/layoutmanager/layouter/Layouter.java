@@ -5,7 +5,7 @@ import android.util.Pair;
 import android.view.View;
 
 import com.volokh.danylo.Config;
-import com.volokh.danylo.layoutmanager.circle_helper.FourQuadrantHelper;
+import com.volokh.danylo.layoutmanager.circle_helper.FirstQuadrantHelper;
 import com.volokh.danylo.layoutmanager.circle_helper.Point;
 import com.volokh.danylo.layoutmanager.ViewData;
 
@@ -20,11 +20,11 @@ public class Layouter {
 
     private final LayouterCallback mCallback;
 
-    private final FourQuadrantHelper mQuadrantHelper;
+    private final FirstQuadrantHelper mQuadrantHelper;
 
     private final int mRadius;
 
-    public Layouter(LayouterCallback callback, int radius, FourQuadrantHelper quadrantHelper){
+    public Layouter(LayouterCallback callback, int radius, FirstQuadrantHelper quadrantHelper){
         mCallback = callback;
         mRadius = radius;
         mQuadrantHelper = quadrantHelper;
@@ -33,29 +33,23 @@ public class Layouter {
     /**
      *
      *
-     *                                                We start at this point "previousViewRight"
-     *                                                CAUTION: previousViewRight cannot be in 2nd quadrant! Why ?
-     *                                                Because only one single view should be in the 1st quadrant.
-     *                                                This view is the one that is partially visible from top edge of RecyclerView
-     *
-     *                                                -> -> -> -> -> -> -> -> -> -> -> ->
-     *                                               |____________                         | If we didn't find
-     *                                               |            -------_                 V
-     *                                               |                    \_
-     *                                               |                      ---__          |
-     *                                               |                           \__       V
-     *                                               |                              \
-     *                                               |                              |      |
-     *                                               |             1st              |      V
-     *                                               |          Quadrant             \
-     *                                               |                     ___________|_____________
-     *                                               |                    |This is the|only view    | The center of this view might be in 1st quadrant.
-     *                                               |                    |in this    |  quadrant   |
-     *                                               |                    |            \            |
-     *                                               |                    |            |            |
-     *  ---------------------------------------------|********************|*************************|****->
-     *            \          3rd Quadrant            *   4th Quadrant     |            /            | <- We need this view to fill the gap here
-     *            |                                  *                   _|____________|____________|
+     *                                               |_____________                         |
+     *                                               |             -------_                 V
+     *                                               |                     \_
+     *                                               |                       ---__          |
+     *                                               |                            \__       V
+     *                                               |                               \
+     *                                               |                               |      |
+     *                                               |             4th               |      V
+     *                                               |          Quadrant              \
+     *                                               |                      ___________|_____________
+     *                                               |                     |This is the|only view    | The center of this view might be in 1st quadrant.
+     *                                               |                     |in this    |  quadrant   |
+     *                                               |                     |            \            |
+     *                                               |                     |            |            |
+     *  ---------------------------------------------|*********************|*************************|****->
+     *            \          2nd Quadrant            *   1st Quadrant      |           /            | <- We need this view to fill the gap here
+     *            |                                  *                   __|___________|____________|
      *            |                                  *                  |Previous      |          |
      *             \                                 *                  |Previous     /           |
      *              |                                *                  |View        |            |
@@ -74,23 +68,20 @@ public class Layouter {
      *                                                                             |        |         |
      *                                                                             |    viewCenterY   |       halfViewHeight
      *                                                                             |__________________|_______
-     * This method is layout-ing views in 1st, 4th and 3rd quadrants in that order.
-     * We start from previous view bottom point and try to find a point on the circumference below that point.
-     * TODO : If we don't find a suitable point below we try to find it to the left of previous view left
-     *
+     * This method is layout-ing views in 4th, 2nd and 3rd quadrants in that order.
      */
-    public ViewData layoutViewNextView(View view, ViewData previousViewData) {
-        if (SHOW_LOGS)Log.v(TAG, ">> layoutViewNextView, previousViewData " + previousViewData);
+    public ViewData layoutNextView(View view, ViewData previousViewData) {
+        if (SHOW_LOGS)Log.v(TAG, ">> layoutNextView, previousViewData " + previousViewData);
 
         Pair<Integer, Integer> halfWidthHeight = mCallback.getHalfWidthHeightPair(view);
 
         Point viewCenter = mQuadrantHelper.findNextViewCenter(previousViewData, halfWidthHeight.first, halfWidthHeight.second);
-        if (SHOW_LOGS) Log.v(TAG, "layoutViewNextView, viewCenter " + viewCenter);
+        if (SHOW_LOGS) Log.v(TAG, "layoutNextView, viewCenter " + viewCenter);
 
         performLayout(view, viewCenter, halfWidthHeight.first, halfWidthHeight.second);
         previousViewData.updateData(view, viewCenter);
 
-        if (SHOW_LOGS) Log.v(TAG, "<< layoutViewNextView");
+        if (SHOW_LOGS) Log.v(TAG, "<< layoutNextView");
         return previousViewData;
     }
 
@@ -99,7 +90,7 @@ public class Layouter {
 
         Pair<Integer, Integer> halfWidthHeight = mCallback.getHalfWidthHeightPair(view);
 
-        Point viewCenter = mQuadrantHelper.findPreviousViewCenter(previousViewData, halfWidthHeight.first, halfWidthHeight.second);
+        Point viewCenter = mQuadrantHelper.findPreviousViewCenter(previousViewData, halfWidthHeight.second);
         if (SHOW_LOGS) Log.v(TAG, "layoutViewPreviousView, viewCenter " + viewCenter);
 
         performLayout(view, viewCenter, halfWidthHeight.first, halfWidthHeight.second);

@@ -111,7 +111,7 @@ public class MainActivity extends ActionBarActivity {
             mRecyclerView.setHasFixedSize(true);
 
 
-            mLondonEyeLayoutManager = new LondonEyeLayoutManager(getActivity(), circleRadius, mRecyclerView);
+            mLondonEyeLayoutManager = new LondonEyeLayoutManager(circleRadius, mRecyclerView);
             mRecyclerView.setLayoutManager(mLondonEyeLayoutManager);//new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
 
             mVideoRecyclerViewAdapter = new LondonEyeListAdapter(getActivity(), mList);
