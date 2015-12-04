@@ -1,4 +1,4 @@
-package com.volokh.danylo.layoutmanager.circle_helper;
+package com.volokh.danylo.layoutmanager.circle_helper.point;
 
 /**
  * Created by danylo.volokh on 28.11.2015.

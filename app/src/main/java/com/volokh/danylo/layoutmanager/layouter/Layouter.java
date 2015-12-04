@@ -5,8 +5,8 @@ import android.util.Pair;
 import android.view.View;
 
 import com.volokh.danylo.Config;
-import com.volokh.danylo.layoutmanager.circle_helper.FirstQuadrantHelper;
-import com.volokh.danylo.layoutmanager.circle_helper.Point;
+import com.volokh.danylo.layoutmanager.circle_helper.quadrant_helper.QuadrantHelper;
+import com.volokh.danylo.layoutmanager.circle_helper.point.Point;
 import com.volokh.danylo.layoutmanager.ViewData;
 
 /**
@@ -20,11 +20,11 @@ public class Layouter {
 
     private final LayouterCallback mCallback;
 
-    private final FirstQuadrantHelper mQuadrantHelper;
+    private final QuadrantHelper mQuadrantHelper;
 
     private final int mRadius;
 
-    public Layouter(LayouterCallback callback, int radius, FirstQuadrantHelper quadrantHelper){
+    public Layouter(LayouterCallback callback, int radius, QuadrantHelper quadrantHelper){
         mCallback = callback;
         mRadius = radius;
         mQuadrantHelper = quadrantHelper;
@@ -35,32 +35,32 @@ public class Layouter {
      *
      *                                               |_____________                         |
      *                                               |             -------_                 V
-     *                                               |                     \_
-     *                                               |                       ---__          |
-     *                                               |                            \__       V
-     *                                               |                               \
-     *                                               |                               |      |
-     *                                               |             4th               |      V
-     *                                               |          Quadrant              \
-     *                                               |                      ___________|_____________
-     *                                               |                     |This is the|only view    | The center of this view might be in 1st quadrant.
+     *                                               |                     ---__
+     *                                               |                          \           |
+     *                                               |                           \          V
+     *                                               |                            \
+     *                                               |                             |        |
+     *                                               |             4th             |        V
+     *                                               |          Quadrant            \
+     *                                               |                      _________|_______________
+     *                                               |                     |This is   \ only view    | The center of this view might be in 1st quadrant.
      *                                               |                     |in this    |  quadrant   |
-     *                                               |                     |            \            |
-     *                                               |                     |            |            |
+     *                                               |                     |           |             |
+     *                                               |                     |           \             |
      *  ---------------------------------------------|*********************|*************************|****->
-     *            \          2nd Quadrant            *   1st Quadrant      |           /            | <- We need this view to fill the gap here
-     *            |                                  *                   __|___________|____________|
-     *            |                                  *                  |Previous      |          |
-     *             \                                 *                  |Previous     /           |
-     *              |                                *                  |View        |            |
-     *               \                               *             _____|___________/_____________|_
-     *                |                              *            |                 |               |
+     *             \          2nd Quadrant            *   1st Quadrant      |           /            | <- We need this view to fill the gap here
+     *             |                                 *                   __|___________|____________|
+     *             |                                 *                  |Previous      |          |
+     *              \                                *                  |Previous     /           |
+     *               |                               *                  |View        |            |
+     *                \                              *             _____|___________/_____________|_
+     *                 |                             *            |                |                |
      *                 |                             *            |Previous        |                |
      *                  \                            *            |View           /                 |
      *                   \                           *            |______________/__________________| <---- previousViewBottomY
      *                    \__                        *                        __/
-     *                       ---___                  *                  ___---
-     *                             -----_____________*_____________-----
+     *                       ---___                  *                    _---
+     *                             -----_____________*_____________-------
      *                                               *               viewTop --->   __________________ _______
      *                                               *                             |   New View       |
      *                                               *                             |                  |       halfViewHeight
@@ -113,7 +113,10 @@ public class Layouter {
         mCallback.layoutDecorated(view, left, top, right, bottom);
     }
 
-
+    /**
+     * This method checks if this is last visible layouted view.
+     * The return might be used to know if we should stop laying out
+     */
     public boolean isLastLayoutedView(View view) {
         boolean isLastLayoutedView;
         int recyclerHeight = mCallback.getHeight();

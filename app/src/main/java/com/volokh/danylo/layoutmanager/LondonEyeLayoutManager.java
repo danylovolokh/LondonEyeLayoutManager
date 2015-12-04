@@ -1,5 +1,6 @@
 package com.volokh.danylo.layoutmanager;
 
+import android.content.Context;
 import android.graphics.Rect;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -7,8 +8,9 @@ import android.util.Pair;
 import android.view.View;
 
 import com.volokh.danylo.Config;
-import com.volokh.danylo.layoutmanager.circle_helper.FirstQuadrantHelper;
-import com.volokh.danylo.layoutmanager.circle_helper.UnitCircleFourthQuadrantHelper;
+import com.volokh.danylo.layoutmanager.circle_helper.mirror_helper.FirstQuadrantCircleMirrorHelper;
+import com.volokh.danylo.layoutmanager.circle_helper.quadrant_helper.FirstQuadrantHelper;
+import com.volokh.danylo.layoutmanager.circle_helper.circle_points_creator.FirstQudrantCirclePointsCreator;
 import com.volokh.danylo.layoutmanager.layouter.Layouter;
 import com.volokh.danylo.layoutmanager.layouter.LayouterCallback;
 import com.volokh.danylo.layoutmanager.scroller.PixelPerfectScrollHandler;
@@ -27,8 +29,6 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
     private static final boolean SHOW_LOGS = Config.SHOW_LOGS;
     private static final String TAG = LondonEyeLayoutManager.class.getSimpleName();
-
-    private final UnitCircleFourthQuadrantHelper mUnitCircleHelper;
 
     private final RecyclerView mRecyclerView;
 
@@ -92,15 +92,14 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
     private int mFirstVisiblePosition = 0; //TODO: restore state
     private int mLastVisiblePosition = 0; //TODO: restore state
 
-    public LondonEyeLayoutManager(int radius, RecyclerView recyclerView) {
+    public LondonEyeLayoutManager(Context context, int radius, int xOrigin, int yOrigin, RecyclerView recyclerView) {
         mRadius = radius;
-
-        mUnitCircleHelper = new UnitCircleFourthQuadrantHelper(
-                mRadius);
 
         mRecyclerView = recyclerView;
 
-        mQuadrantHelper = new FirstQuadrantHelper(mRadius, 0, 0);
+        int quadrant = QuadrantCalculator.getQuadrant(context, radius, xOrigin, yOrigin);
+        // TODO: use factories to create entities
+        mQuadrantHelper = new FirstQuadrantHelper(mRadius, new FirstQudrantCirclePointsCreator(mRadius, xOrigin, yOrigin, new FirstQuadrantCircleMirrorHelper()));
 
         mLayouter = new Layouter(this, mRadius, mQuadrantHelper); // TODO: get from constructor
         mScroller = new PixelPerfectScrollHandler(this, mRadius, mQuadrantHelper, mLayouter); // TODO: use strategy for this

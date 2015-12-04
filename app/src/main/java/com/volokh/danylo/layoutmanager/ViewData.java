@@ -5,7 +5,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.volokh.danylo.Config;
-import com.volokh.danylo.layoutmanager.circle_helper.Point;
+import com.volokh.danylo.layoutmanager.circle_helper.point.Point;
 
 /**
  * Created by danylo.volokh on 11/21/2015.

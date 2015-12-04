@@ -6,6 +6,7 @@ import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -111,7 +112,7 @@ public class MainActivity extends ActionBarActivity {
             mRecyclerView.setHasFixedSize(true);
 
 
-            mLondonEyeLayoutManager = new LondonEyeLayoutManager(circleRadius, mRecyclerView);
+            mLondonEyeLayoutManager = new LondonEyeLayoutManager(getActivity(), circleRadius, 0, 0, mRecyclerView);
             mRecyclerView.setLayoutManager(mLondonEyeLayoutManager);//new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
 
             mVideoRecyclerViewAdapter = new LondonEyeListAdapter(getActivity(), mList);

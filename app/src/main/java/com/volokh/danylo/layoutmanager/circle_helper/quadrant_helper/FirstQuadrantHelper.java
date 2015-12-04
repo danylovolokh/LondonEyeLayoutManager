@@ -1,9 +1,11 @@
-package com.volokh.danylo.layoutmanager.circle_helper;
+package com.volokh.danylo.layoutmanager.circle_helper.quadrant_helper;
 
 import android.util.Log;
 
 import com.volokh.danylo.Config;
 import com.volokh.danylo.layoutmanager.ViewData;
+import com.volokh.danylo.layoutmanager.circle_helper.circle_points_creator.CirclePointsCreator;
+import com.volokh.danylo.layoutmanager.circle_helper.point.Point;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +30,7 @@ import java.util.Map;
  *        <--       +y V              <---
  *
  */
-public class FirstQuadrantHelper { // TODO: implements generic quadrant helper
+public class FirstQuadrantHelper implements QuadrantHelper { // TODO: implements generic quadrant helper
 
     private static final boolean SHOW_LOGS = Config.SHOW_LOGS;
     private static final String TAG = FirstQuadrantHelper.class.getSimpleName();
@@ -38,7 +40,7 @@ public class FirstQuadrantHelper { // TODO: implements generic quadrant helper
 
     private final int mRadius;
 
-    public FirstQuadrantHelper(int radius, int x0, int y0){
+    public FirstQuadrantHelper(int radius, CirclePointsCreator qudrantCirclePointsCreator){
 
         mRadius = radius;
 
@@ -48,8 +50,7 @@ public class FirstQuadrantHelper { // TODO: implements generic quadrant helper
         if(SHOW_LOGS) Log.v(TAG, ">> constructor, start filling sector points");
         long start = System.currentTimeMillis();
 
-        CirclePointsCreator circlePointsCreator = new CirclePointsCreator(mRadius, x0, y0);
-        circlePointsCreator.fillCirclePointsCircle(mCircleIndexPoint, mCirclePointIndex);
+        qudrantCirclePointsCreator.fillCirclePoints(mCircleIndexPoint, mCirclePointIndex);
 
         if(SHOW_LOGS) Log.v(TAG, "<< constructor, finished filling sector points in " + (System.currentTimeMillis() - start));
 
@@ -138,6 +139,7 @@ next view|    |_        |  |          _|
      *
      *     5. If any condition from 3, 4, 5 match then we found a center on the circle for the next view.
      */
+    @Override
     public Point findNextViewCenter(ViewData previousViewData, int nextViewHalfViewWidth, int nextViewHalfViewHeight) {
 
         Point previousViewCenter = previousViewData.getCenterPoint();
@@ -220,16 +222,19 @@ next view|    |_        |  |          _|
         return mCircleIndexPoint.get(previousViewCenterPointIndex);
     }
 
+    @Override
     public int getViewCenterPointIndex(Point point) {
         return mCirclePointIndex.get(point);
     }
 
+    @Override
     public Point getViewCenterPoint(int newCenterPointIndex) {
         return mCircleIndexPoint.get(
                 newCenterPointIndex
         );
     }
 
+    @Override
     public int getNewCenterPointIndex(int newCalculatedIndex) {
 
         int lastIndex = mCircleIndexPoint.size() - 1;
@@ -311,6 +316,7 @@ next view|    |_        |  |          _|
      *
      *
      */
+    @Override
     public Point findPreviousViewCenter(ViewData nextViewData, int previousViewHalfViewHeight) {
 
         Point nextViewCenter = nextViewData.getCenterPoint();

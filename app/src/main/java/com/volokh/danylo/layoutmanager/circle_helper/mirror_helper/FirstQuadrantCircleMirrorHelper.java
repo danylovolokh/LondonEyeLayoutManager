@@ -1,33 +1,28 @@
-package com.volokh.danylo.layoutmanager.circle_helper;
+package com.volokh.danylo.layoutmanager.circle_helper.mirror_helper;
 
 import android.util.Log;
 
 import com.volokh.danylo.Config;
+import com.volokh.danylo.layoutmanager.circle_helper.point.Point;
 
 import java.util.Map;
 
 /**
- * This class is a helper for {@link com.volokh.danylo.layoutmanager.circle_helper.CirclePointsCreator}
+ * This class is a helper for {@link com.volokh.danylo.layoutmanager.circle_helper.circle_points_creator.FirstQudrantCirclePointsCreator}
  *
  * It can create a full circle points using points from 1st octant. It is mirroring existing points to the points in other circle sectors.
  *
- * It is based on "Midpoint circle algorithm"
- *
  */
-public class CircleMirrorHelper{
+public class FirstQuadrantCircleMirrorHelper implements CircleMirrorHelper {
 
     private static final boolean SHOW_LOGS = Config.SHOW_LOGS;
-    private static final String TAG = CircleMirrorHelper.class.getSimpleName();
+    private static final String TAG = FirstQuadrantCircleMirrorHelper.class.getSimpleName();
 
     enum Action{
         MIRROR_2ND_OCTANT,
         MIRROR_2ND_QUADRANT,
-        MIRROR_2ND_SEMICIRCLE,
+        MIRROR_2ND_SEMICIRCLE
     }
-
-    private CircleMirrorHelper(){}
-
-
 
     /**
      * This method takes the points from 1st octant and mirror them to the 2nd octant
@@ -50,7 +45,8 @@ public class CircleMirrorHelper{
      *                     |
      *                     |
      */
-    public static void mirror_2nd_Octant(
+    @Override
+    public void mirror_2nd_Octant(
             Map<Integer, Point> circleIndexPoint,
             Map<Point, Integer> circlePointIndex
     ) {
@@ -66,7 +62,8 @@ public class CircleMirrorHelper{
         }
     }
 
-    public static void mirror_2nd_Quadrant(
+    @Override
+    public void mirror_2nd_Quadrant(
             Map<Integer, Point> circleIndexPoint,
             Map<Point, Integer> circlePointIndex
     ) {
@@ -82,7 +79,8 @@ public class CircleMirrorHelper{
         }
     }
 
-    public static void mirror_2nd_Semicircle(
+    @Override
+    public void mirror_2nd_Semicircle(
             Map<Integer, Point> circleIndexPoint,
             Map<Point, Integer> circlePointIndex
     ) {
@@ -100,12 +98,12 @@ public class CircleMirrorHelper{
 
     }
 
-    public static void createMirroredPoint(
+    private void createMirroredPoint(
             Action action,
             int pointIndex,
             Map<Integer, Point> circleIndexPoint,
             Map<Point, Integer> circlePointIndex
-            ) {
+    ) {
 
         Point pointAtIndex = circleIndexPoint.get(pointIndex);
 

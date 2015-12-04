@@ -6,9 +6,9 @@ import android.view.View;
 
 import com.volokh.danylo.Config;
 import com.volokh.danylo.layoutmanager.ViewData;
-import com.volokh.danylo.layoutmanager.circle_helper.FirstQuadrantHelper;
-import com.volokh.danylo.layoutmanager.circle_helper.Point;
-import com.volokh.danylo.layoutmanager.circle_helper.UpdatablePoint;
+import com.volokh.danylo.layoutmanager.circle_helper.quadrant_helper.FirstQuadrantHelper;
+import com.volokh.danylo.layoutmanager.circle_helper.point.Point;
+import com.volokh.danylo.layoutmanager.circle_helper.point.UpdatablePoint;
 import com.volokh.danylo.layoutmanager.layouter.Layouter;
 
 /**

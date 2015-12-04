@@ -1,28 +1,40 @@
-package com.volokh.danylo.layoutmanager.circle_helper;
+package com.volokh.danylo.layoutmanager.circle_helper.circle_points_creator;
 
 import android.util.Log;
 
 import com.volokh.danylo.Config;
+import com.volokh.danylo.layoutmanager.circle_helper.mirror_helper.CircleMirrorHelper;
+import com.volokh.danylo.layoutmanager.circle_helper.point.Point;
 
 import java.util.Map;
 
 /**
- * Created by danylo.volokh on 11/22/2015.
- * This class "knows" how to fill sector lists with points
+ *  Created by danylo.volokh on 11/22/2015.
+ *  This class is a "Template method". It "knows" in which order point should be created.
+ *
+ *  This class also uses {@link com.volokh.danylo.layoutmanager.circle_helper.mirror_helper.CircleMirrorHelper} to mirror created point.
+ *  Exactly as required by "Mid point circle algorithm" but a bit modified.
+ *
+ *  "Midpoint circle algorithm" creates all 8 octant in parallel.
+ *  We are using "Midpoint circle algorithm" to create 1st octant and the mirror other points consecutively:
+ *  1 octant, 2 octant, 2 quadrant, 2 semicircle
  */
-public class CirclePointsCreator {
+public class FirstQudrantCirclePointsCreator implements CirclePointsCreator {
 
     private static final boolean SHOW_LOGS = Config.SHOW_LOGS;
-    private static final String TAG = CirclePointsCreator.class.getSimpleName();
+    private static final String TAG = FirstQudrantCirclePointsCreator.class.getSimpleName();
 
     private final int mRadius;
     private final int mX0;
     private final int mY0;
 
-    public CirclePointsCreator(int radius, int x0, int y0){
+    private final CircleMirrorHelper mCircleMirrorHelper;
+
+    public FirstQudrantCirclePointsCreator(int radius, int x0, int y0, CircleMirrorHelper circleMirrorHelper){
         mRadius = radius;
         mX0 = x0;
         mY0 = y0;
+        mCircleMirrorHelper = circleMirrorHelper;
     }
 
     /**
@@ -40,32 +52,34 @@ public class CirclePointsCreator {
      *  4. Mirror 2nd semicircle points using points from 1 semicircle
      *
      */
-    public void fillCirclePointsCircle(
+
+    @Override
+    public void fillCirclePoints(
             Map<Integer, Point> circleIndexPoint,
             Map<Point, Integer> circlePointIndex)
     {
-        if(SHOW_LOGS) Log.v(TAG, ">> fillCirclePointsCircle");
+        if(SHOW_LOGS) Log.v(TAG, ">> fillCirclePoints");
 
         createFirstOctant(circleIndexPoint, circlePointIndex);
 
         /** at this stage "circleIndexPoint" and "circlePointIndex" contains only the points from first octant*/
-        CircleMirrorHelper.mirror_2nd_Octant(
+        mCircleMirrorHelper.mirror_2nd_Octant(
                 circleIndexPoint,
                 circlePointIndex);
 
         /** at this stage "circleIndexPoint" and "circlePointIndex" contains only the points from first quadrant*/
-        CircleMirrorHelper.mirror_2nd_Quadrant(
+        mCircleMirrorHelper.mirror_2nd_Quadrant(
                 circleIndexPoint,
                 circlePointIndex
         );
 
         /** at this stage "circleIndexPoint" and "circlePointIndex" contains only the points from first semicircle*/
-        CircleMirrorHelper.mirror_2nd_Semicircle(
+        mCircleMirrorHelper.mirror_2nd_Semicircle(
                 circleIndexPoint,
                 circlePointIndex
         );
 
-        if(SHOW_LOGS) Log.v(TAG, "<< fillCirclePointsCircle");
+        if(SHOW_LOGS) Log.v(TAG, "<< fillCirclePoints");
     }
 
     /**
