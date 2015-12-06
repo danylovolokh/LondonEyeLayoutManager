@@ -7,16 +7,35 @@ import android.graphics.Paint;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.Log;
+
+import com.volokh.danylo.layoutmanager.circle_helper.circle_points_creator.FirstQudrantCirclePointsCreator;
+import com.volokh.danylo.layoutmanager.circle_helper.mirror_helper.FirstQuadrantCircleMirrorHelper;
+import com.volokh.danylo.layoutmanager.circle_helper.point.Point;
+
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by danylo.volokh on 10/31/2015.
  */
 public class DebugRecyclerView extends RecyclerView {
 
+    private static final String TAG = DebugRecyclerView.class.getSimpleName();
     private Paint mPaint;
     private Paint mPaint2;
 
     private int mRadius;
+
+    private int mXOrigin;
+    private int mYOrigin;
+    private FirstQudrantCirclePointsCreator creator;
+
+    private LinkedHashMap<Integer, Point> mCircleIndexPoint;
+    private LinkedHashMap<Point, Integer> mCirclePointIndex;
+    private Paint mPaint3;
 
     public DebugRecyclerView(Context context) {
         super(context);
@@ -34,8 +53,19 @@ public class DebugRecyclerView extends RecyclerView {
         init();
     }
 
-    public void setRadius(int radius){
+    public void setParameters(int radius, int xOrigin, int yOrigin){
         mRadius = radius;
+        mXOrigin = xOrigin;
+        mYOrigin = yOrigin;
+
+        mCircleIndexPoint = new LinkedHashMap<>();
+        mCirclePointIndex = new LinkedHashMap<>();
+
+        Log.v(TAG, "init mRadius " + mRadius);
+        creator = new FirstQudrantCirclePointsCreator(mRadius, mXOrigin, mYOrigin, new FirstQuadrantCircleMirrorHelper(mXOrigin, mYOrigin));
+        creator.fillCirclePoints(mCircleIndexPoint, mCirclePointIndex);
+        Log.v(TAG, "init " + mCirclePointIndex.size());
+
         invalidate();
     }
 
@@ -46,19 +76,19 @@ public class DebugRecyclerView extends RecyclerView {
 
         mPaint2 = new Paint();
         mPaint2.setColor(Color.BLACK);
+        mPaint2.setStrokeWidth(5);
 
     }
 
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
-        canvas.drawCircle(0, 0, mRadius, mPaint);
-        canvas.drawLine(0, mRadius, mRadius, mRadius, mPaint2);
 
-    }
+        canvas.drawCircle(mXOrigin, mYOrigin, mRadius, mPaint);
+        canvas.drawLine(mXOrigin, mYOrigin, 3000, mYOrigin, mPaint2);
+        canvas.drawLine(mXOrigin, mYOrigin, -3000, mYOrigin, mPaint2);
+        canvas.drawLine(mXOrigin, mYOrigin, mXOrigin, 3000, mPaint2);
+        canvas.drawLine(mXOrigin, mYOrigin, mXOrigin, -3000, mPaint2);
 
-    @Override
-    public void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
     }
 }

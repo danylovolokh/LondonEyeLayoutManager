@@ -99,7 +99,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
         int quadrant = QuadrantCalculator.getQuadrant(context, radius, xOrigin, yOrigin);
         // TODO: use factories to create entities
-        mQuadrantHelper = new FirstQuadrantHelper(mRadius, new FirstQudrantCirclePointsCreator(mRadius, xOrigin, yOrigin, new FirstQuadrantCircleMirrorHelper()));
+        mQuadrantHelper = new FirstQuadrantHelper(mRadius, new FirstQudrantCirclePointsCreator(mRadius, xOrigin, yOrigin, new FirstQuadrantCircleMirrorHelper(xOrigin, yOrigin)));
 
         mLayouter = new Layouter(this, mRadius, mQuadrantHelper); // TODO: get from constructor
         mScroller = new PixelPerfectScrollHandler(this, mRadius, mQuadrantHelper, mLayouter); // TODO: use strategy for this

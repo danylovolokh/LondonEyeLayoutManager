@@ -18,6 +18,14 @@ public class FirstQuadrantCircleMirrorHelper implements CircleMirrorHelper {
     private static final boolean SHOW_LOGS = Config.SHOW_LOGS;
     private static final String TAG = FirstQuadrantCircleMirrorHelper.class.getSimpleName();
 
+    private final int mX0;
+    private final int mY0;
+
+    public FirstQuadrantCircleMirrorHelper(int x0, int y0){
+        mX0 = x0;
+        mY0 = y0;
+    }
+
     enum Action{
         MIRROR_2ND_OCTANT,
         MIRROR_2ND_QUADRANT,
@@ -162,46 +170,61 @@ public class FirstQuadrantCircleMirrorHelper implements CircleMirrorHelper {
      *   x2* = y2
      *   y2* = x2
      *
+     * Here is the explanation of the implementation.
+     * This is how 1st and 2nd octant is drawn in "Mid point circle" algorithm
+     *
+     * DrawPixel( x + x0,  y + y0); // Octant 1
+     * DrawPixel( y + x0,  x + y0); // Octant 2
+     *
+     * To mirror second point using "firstOctantPoint" we have to know original x and y;
+     *
+     * Get original x, y from "firstOctantPoint":
+     * firstOctant_X = x + x0; -> x = firstOctant_X - x0;
+     * firstOctant_Y = y + y0; -> y = firstOctant_Y - y0;
+     *
+     * Get "secondOctantPoint" from original x, y
+     * secondOctant_X = y + x0; -> firstOctant_Y - y0 + x0;
+     * secondOctant_Y = x + y0; -> firstOctant_X - x0 + y0;
      */
-    private static Point mirror_2nd_OctantPoint(Point firstOctantPoint) {
-        return new Point(firstOctantPoint.getY(), firstOctantPoint.getX());
+    private Point mirror_2nd_OctantPoint(Point firstOctantPoint) {
+        return new Point(firstOctantPoint.getY() - mY0 + mX0, firstOctantPoint.getX() - mX0 + mY0);
     }
 
     /**
      * This method takes a single point from 1st octant and mirror it to the 2nd octant
      *
-     *                                     ^
-     *                    2nd Quadrant  +y |     1st Quadrant
-     *                                     |
-     *                                     |
-     *                      (x3*; y3*) *<--|---* (x3; y3)
-     *               (x2*; y2*) *<---------|----------*(x2; y2)
-     *                                     |
-     *                                     |
-     *                                     |
-     *                                     |
-     *                                     |
-     *                                     |
-     *                                     |
-     *          (x1*; y1*) *<--------------|---------------* (x1; y1)
-     *                                     |
-     *                                     |                                      +x
-     *-------------------------------------|------------------------------------->
+     *  ^ +y                                ^
+     *  |                  2nd Quadrant  +y |     1st Quadrant
+     *  |                                   |
+     *  |                                   |
+     *  |                    (x3*; y3*) *<--|---* (x3; y3)
+     *  |             (x2*; y2*) *<---------|----------*(x2; y2)
+     *  |                                   |
+     *  |                                   |
+     *  |                                   |
+     *  |                                   |
+     *  |                                   |
+     *  |                                   |
+     *  |                                   |
+     *  |        (x1*; y1*) *<--------------|---------------* (x1; y1)
+     *  |                                   |
+     *  |                                   |                                      +x
+     *--|-----------------------------------|------------------------------------->
      *
      *   How to get a mirrored point (x1*, y1*) when we have it's mirror (x1, y1)?
-     *   x1* = -x1
+     *   x1* = x0 - (x1 - x0) = 2*x0 - x1
      *   y1* = y1
      ************
      *   How to get a mirrored point (x2*, y2*) when we have it's mirror (x2, y2)?
-     *   x2* = -x2
+     *   x2* = x0 - (x2 - x0) = 2*x0 - x2
      *   y2* = y2
      ************
      *   How to get a mirrored point (x3*, y3*) when we have it's mirror (x3, y3)?
-     *   x3* = -x3
+     *   x3* = x0 - (x3 - x0) = 2*x0 - x3
      *   y3* = y3
      */
-    private static Point mirror_2nd_QuadrantPoint(Point secondQuadrantPoint) {
-        return new Point(-secondQuadrantPoint.getX(), secondQuadrantPoint.getY());
+    private Point mirror_2nd_QuadrantPoint(Point secondQuadrantPoint) {
+        return new Point(-secondQuadrantPoint.getX() + 2 * mX0, secondQuadrantPoint.getY());
     }
 
     /**
@@ -240,22 +263,22 @@ public class FirstQuadrantCircleMirrorHelper implements CircleMirrorHelper {
      *                                     |
      *   How to get a mirrored point (x1*, y1*) when we have it's mirror (x1, y1)?
      *   x1* = x1
-     *   y1* = -y1
+     *   y1* = y0 - (y1 - y0) = 2 * y0 - y1
      ************
      *   How to get a mirrored point (x2*, y2*) when we have it's mirror (x2, y2)?
      *   x2* = x2
-     *   y2* = -y2
+     *   y2* = y0 - (y2 - y0) = 2 * y0 - y2
      ************
      *   How to get a mirrored point (x3*, y3*) when we have it's mirror (x3, y3)?
      *   x3* = x3
-     *   y3* = -y3
+     *   y3* = y0 - (y3 - y0) = 2 * y0 - y3
      ************
      *   How to get a mirrored point (x4*, y4*) when we have it's mirror (x4, y4)?
      *   x4* = x4
-     *   y4* = -y4
+     *   y4* = y0 - (y3 - y0) = 2 * y0 - y3
      */
-    private static Point mirror_2nd_SemicirclePoint(Point firstSemicirclePoint) {
-        return new Point(firstSemicirclePoint.getX(), -firstSemicirclePoint.getY());
+    private Point mirror_2nd_SemicirclePoint(Point firstSemicirclePoint) {
+        return new Point(firstSemicirclePoint.getX(), -firstSemicirclePoint.getY() + 2 * mY0);
     }
 
 }
