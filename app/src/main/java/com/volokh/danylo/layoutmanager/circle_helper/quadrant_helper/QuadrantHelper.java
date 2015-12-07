@@ -1,5 +1,7 @@
 package com.volokh.danylo.layoutmanager.circle_helper.quadrant_helper;
 
+import android.view.View;
+
 import com.volokh.danylo.layoutmanager.ViewData;
 import com.volokh.danylo.layoutmanager.circle_helper.point.Point;
 
@@ -21,4 +23,6 @@ public interface QuadrantHelper {
     int getNewCenterPointIndex(int newCalculatedIndex);
 
     Point findPreviousViewCenter(ViewData nextViewData, int previousViewHalfViewHeight);
+
+    boolean isLastLayoutedView(int recyclerHeight, View view);
 }

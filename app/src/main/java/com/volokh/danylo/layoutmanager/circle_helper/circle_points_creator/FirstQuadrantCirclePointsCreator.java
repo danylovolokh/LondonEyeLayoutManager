@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.volokh.danylo.Config;
 import com.volokh.danylo.layoutmanager.circle_helper.mirror_helper.CircleMirrorHelper;
+import com.volokh.danylo.layoutmanager.circle_helper.mirror_helper.FirstQuadrantCircleMirrorHelper;
 import com.volokh.danylo.layoutmanager.circle_helper.point.Point;
 
 import java.util.Map;
@@ -19,10 +20,10 @@ import java.util.Map;
  *  We are using "Midpoint circle algorithm" to create 1st octant and the mirror other points consecutively:
  *  1 octant, 2 octant, 2 quadrant, 2 semicircle
  */
-public class FirstQudrantCirclePointsCreator implements CirclePointsCreator {
+public class FirstQuadrantCirclePointsCreator implements CirclePointsCreator {
 
     private static final boolean SHOW_LOGS = Config.SHOW_LOGS;
-    private static final String TAG = FirstQudrantCirclePointsCreator.class.getSimpleName();
+    private static final String TAG = FirstQuadrantCirclePointsCreator.class.getSimpleName();
 
     private final int mRadius;
     private final int mX0;
@@ -30,11 +31,11 @@ public class FirstQudrantCirclePointsCreator implements CirclePointsCreator {
 
     private final CircleMirrorHelper mCircleMirrorHelper;
 
-    public FirstQudrantCirclePointsCreator(int radius, int x0, int y0, CircleMirrorHelper circleMirrorHelper){
+    public FirstQuadrantCirclePointsCreator(int radius, int x0, int y0){
         mRadius = radius;
         mX0 = x0;
         mY0 = y0;
-        mCircleMirrorHelper = circleMirrorHelper;
+        mCircleMirrorHelper = new FirstQuadrantCircleMirrorHelper(x0, y0);
     }
 
     /**

@@ -1,10 +1,11 @@
 package com.volokh.danylo.layoutmanager.circle_helper.quadrant_helper;
 
 import android.util.Log;
+import android.view.View;
 
 import com.volokh.danylo.Config;
 import com.volokh.danylo.layoutmanager.ViewData;
-import com.volokh.danylo.layoutmanager.circle_helper.circle_points_creator.CirclePointsCreator;
+import com.volokh.danylo.layoutmanager.circle_helper.circle_points_creator.FirstQuadrantCirclePointsCreator;
 import com.volokh.danylo.layoutmanager.circle_helper.point.Point;
 
 import java.util.HashMap;
@@ -40,8 +41,7 @@ public class FirstQuadrantHelper implements QuadrantHelper { // TODO: implements
 
     private final int mRadius;
 
-    public FirstQuadrantHelper(int radius, CirclePointsCreator qudrantCirclePointsCreator){
-
+    public FirstQuadrantHelper(int radius, int xOrigin, int yOrigin) {
         mRadius = radius;
 
         mCircleIndexPoint = new HashMap<>();
@@ -50,10 +50,10 @@ public class FirstQuadrantHelper implements QuadrantHelper { // TODO: implements
         if(SHOW_LOGS) Log.v(TAG, ">> constructor, start filling sector points");
         long start = System.currentTimeMillis();
 
-        qudrantCirclePointsCreator.fillCirclePoints(mCircleIndexPoint, mCirclePointIndex);
+        FirstQuadrantCirclePointsCreator quadrantCirclePointsCreator = new FirstQuadrantCirclePointsCreator(radius, xOrigin, yOrigin);
+        quadrantCirclePointsCreator.fillCirclePoints(mCircleIndexPoint, mCirclePointIndex);
 
         if(SHOW_LOGS) Log.v(TAG, "<< constructor, finished filling sector points in " + (System.currentTimeMillis() - start));
-
     }
 
     /**
@@ -341,6 +341,24 @@ next view|    |_        |  |          _|
 
         if(SHOW_LOGS) Log.v(TAG, "<< findPreviousViewCenter, findPreviousViewCenter " + foundNextViewCenter);
         return nextViewCenter;
+    }
+
+    /**
+     * This method checks if this is last visible layouted view.
+     * The return might be used to know if we should stop laying out
+     * TODO: use this method in Scroll Handler
+     */
+    @Override
+    public boolean isLastLayoutedView(int recyclerHeight, View view) {
+        boolean isLastLayoutedView;
+        if(SHOW_LOGS) Log.v(TAG, "isLastLayoutedView, recyclerHeight " + recyclerHeight);
+        int spaceToLeftEdge = view.getLeft();
+        if(SHOW_LOGS) Log.v(TAG, "isLastLayoutedView, spaceToLeftEdge " + spaceToLeftEdge);
+        int spaceToBottomEdge = view.getBottom();
+        if(SHOW_LOGS) Log.v(TAG, "isLastLayoutedView, spaceToBottomEdge " + spaceToBottomEdge);
+        isLastLayoutedView = spaceToLeftEdge <= 0 || spaceToBottomEdge >= recyclerHeight;
+        if(SHOW_LOGS) Log.v(TAG, "isLastLayoutedView, " + isLastLayoutedView);
+        return isLastLayoutedView;
     }
 
 }

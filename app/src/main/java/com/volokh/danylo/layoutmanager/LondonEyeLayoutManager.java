@@ -8,9 +8,8 @@ import android.util.Pair;
 import android.view.View;
 
 import com.volokh.danylo.Config;
-import com.volokh.danylo.layoutmanager.circle_helper.mirror_helper.FirstQuadrantCircleMirrorHelper;
-import com.volokh.danylo.layoutmanager.circle_helper.quadrant_helper.FirstQuadrantHelper;
-import com.volokh.danylo.layoutmanager.circle_helper.circle_points_creator.FirstQudrantCirclePointsCreator;
+import com.volokh.danylo.layoutmanager.circle_helper.quadrant_helper.QuadrantHelper;
+import com.volokh.danylo.layoutmanager.circle_helper.quadrant_helper.QuadrantHelperFactory;
 import com.volokh.danylo.layoutmanager.layouter.Layouter;
 import com.volokh.danylo.layoutmanager.layouter.LayouterCallback;
 import com.volokh.danylo.layoutmanager.scroller.PixelPerfectScrollHandler;
@@ -35,12 +34,10 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
     private final Layouter mLayouter;
 
     private final ScrollHandler mScroller;
-    private final FirstQuadrantHelper mQuadrantHelper;
-
+    private final QuadrantHelper mQuadrantHelper;
 
     /**
-     * This is a helper value. We should always return "true" from {@link #canScrollVertically()}
-     * and {@link #canScrollHorizontally()} but we need to change this value to false when measuring a child view size.
+     * This is a helper value. We should always return "true" from {@link #canScrollVertically()} but we need to change this value to false when measuring a child view size.
      * This is because the width "match_parent" is not calculated correctly if {@link #canScrollHorizontally()} returns "true"
      * and
      * the height "match_parent" is not calculated correctly if {@link #canScrollVertically()} returns "true"
@@ -97,11 +94,9 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
         mRecyclerView = recyclerView;
 
-        int quadrant = QuadrantCalculator.getQuadrant(context, radius, xOrigin, yOrigin);
-        // TODO: use factories to create entities
-        mQuadrantHelper = new FirstQuadrantHelper(mRadius, new FirstQudrantCirclePointsCreator(mRadius, xOrigin, yOrigin, new FirstQuadrantCircleMirrorHelper(xOrigin, yOrigin)));
+        mQuadrantHelper = QuadrantHelperFactory.createQuadrantHelper(radius, xOrigin, yOrigin);
 
-        mLayouter = new Layouter(this, mRadius, mQuadrantHelper); // TODO: get from constructor
+        mLayouter = new Layouter(this, mRadius, mQuadrantHelper);
         mScroller = new PixelPerfectScrollHandler(this, mRadius, mQuadrantHelper, mLayouter); // TODO: use strategy for this
     }
 

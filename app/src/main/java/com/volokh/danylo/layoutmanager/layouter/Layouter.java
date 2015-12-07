@@ -118,16 +118,7 @@ public class Layouter {
      * The return might be used to know if we should stop laying out
      */
     public boolean isLastLayoutedView(View view) {
-        boolean isLastLayoutedView;
         int recyclerHeight = mCallback.getHeight();
-        if(SHOW_LOGS) Log.v(TAG, "isLastLayoutedView, recyclerHeight " + recyclerHeight);
-
-        int spaceToLeftEdge = view.getLeft();
-        if(SHOW_LOGS) Log.v(TAG, "isLastLayoutedView, spaceToLeftEdge " + spaceToLeftEdge);
-        int spaceToBottomEdge = view.getBottom();
-        if(SHOW_LOGS) Log.v(TAG, "isLastLayoutedView, spaceToBottomEdge " + spaceToBottomEdge);
-        isLastLayoutedView = spaceToLeftEdge <= 0 || spaceToBottomEdge >= recyclerHeight;
-        if(SHOW_LOGS) Log.v(TAG, "isLastLayoutedView, " + isLastLayoutedView);
-        return isLastLayoutedView;
+        return mQuadrantHelper.isLastLayoutedView(recyclerHeight, view);
     }
 }

@@ -9,14 +9,10 @@ import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.util.Log;
 
-import com.volokh.danylo.layoutmanager.circle_helper.circle_points_creator.FirstQudrantCirclePointsCreator;
-import com.volokh.danylo.layoutmanager.circle_helper.mirror_helper.FirstQuadrantCircleMirrorHelper;
+import com.volokh.danylo.layoutmanager.circle_helper.circle_points_creator.FirstQuadrantCirclePointsCreator;
 import com.volokh.danylo.layoutmanager.circle_helper.point.Point;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by danylo.volokh on 10/31/2015.
@@ -31,11 +27,11 @@ public class DebugRecyclerView extends RecyclerView {
 
     private int mXOrigin;
     private int mYOrigin;
-    private FirstQudrantCirclePointsCreator creator;
+
+    private FirstQuadrantCirclePointsCreator mCirclePointsCreator;
 
     private LinkedHashMap<Integer, Point> mCircleIndexPoint;
     private LinkedHashMap<Point, Integer> mCirclePointIndex;
-    private Paint mPaint3;
 
     public DebugRecyclerView(Context context) {
         super(context);
@@ -62,8 +58,8 @@ public class DebugRecyclerView extends RecyclerView {
         mCirclePointIndex = new LinkedHashMap<>();
 
         Log.v(TAG, "init mRadius " + mRadius);
-        creator = new FirstQudrantCirclePointsCreator(mRadius, mXOrigin, mYOrigin, new FirstQuadrantCircleMirrorHelper(mXOrigin, mYOrigin));
-        creator.fillCirclePoints(mCircleIndexPoint, mCirclePointIndex);
+        mCirclePointsCreator = new FirstQuadrantCirclePointsCreator(mRadius, mXOrigin, mYOrigin);
+        mCirclePointsCreator.fillCirclePoints(mCircleIndexPoint, mCirclePointIndex);
         Log.v(TAG, "init " + mCirclePointIndex.size());
 
         invalidate();

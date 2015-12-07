@@ -8,7 +8,7 @@ import com.volokh.danylo.layoutmanager.circle_helper.point.Point;
 import java.util.Map;
 
 /**
- * This class is a helper for {@link com.volokh.danylo.layoutmanager.circle_helper.circle_points_creator.FirstQudrantCirclePointsCreator}
+ * This class is a helper for {@link com.volokh.danylo.layoutmanager.circle_helper.circle_points_creator.FirstQuadrantCirclePointsCreator}
  *
  * It can create a full circle points using points from 1st octant. It is mirroring existing points to the points in other circle sectors.
  *

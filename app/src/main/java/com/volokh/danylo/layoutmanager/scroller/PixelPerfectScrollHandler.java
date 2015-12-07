@@ -6,9 +6,9 @@ import android.view.View;
 
 import com.volokh.danylo.Config;
 import com.volokh.danylo.layoutmanager.ViewData;
-import com.volokh.danylo.layoutmanager.circle_helper.quadrant_helper.FirstQuadrantHelper;
 import com.volokh.danylo.layoutmanager.circle_helper.point.Point;
 import com.volokh.danylo.layoutmanager.circle_helper.point.UpdatablePoint;
+import com.volokh.danylo.layoutmanager.circle_helper.quadrant_helper.QuadrantHelper;
 import com.volokh.danylo.layoutmanager.layouter.Layouter;
 
 /**
@@ -21,7 +21,7 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
     private static final String TAG = PixelPerfectScrollHandler.class.getSimpleName();
 
     private final ScrollHandlerCallback mCallback;
-    private final FirstQuadrantHelper mQuadrantHelper;
+    private final QuadrantHelper mQuadrantHelper;
     private final int mRadius;
     private final Layouter mLayouter;
 
@@ -31,7 +31,7 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
      */
     private final static UpdatablePoint SCROLL_HELPER_POINT = new UpdatablePoint(0, 0);
 
-    public PixelPerfectScrollHandler(ScrollHandlerCallback callback, int radius, FirstQuadrantHelper quadrantHelper, Layouter layouter) {
+    public PixelPerfectScrollHandler(ScrollHandlerCallback callback, int radius, QuadrantHelper quadrantHelper, Layouter layouter) {
         mCallback = callback;
         mRadius = radius;
         mQuadrantHelper = quadrantHelper;
