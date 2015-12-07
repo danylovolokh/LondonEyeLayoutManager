@@ -34,6 +34,9 @@ public class LondonEyeListAdapter extends RecyclerView.Adapter<PassengerCapsuleV
         if(SHOW_LOGS) Log.v(TAG, "onCreateViewHolder, viewType " + viewType);
 
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.capsule_layout, parent, false);
+        ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
+        layoutParams.height = mActivity.getResources().getDisplayMetrics().widthPixels/2;
+        layoutParams.width = layoutParams.height;
         return new PassengerCapsuleViewHolder(view);
     }
 
@@ -41,6 +44,7 @@ public class LondonEyeListAdapter extends RecyclerView.Adapter<PassengerCapsuleV
     public void onBindViewHolder(PassengerCapsuleViewHolder holder, int position) {
         if(SHOW_LOGS) Log.v(TAG, "onBindViewHolder, position " + position);
         holder.mCapsuleName.setText(mList.get(position));
+        holder.mItemView.setTag(mList.get(position));
     }
 
     @Override

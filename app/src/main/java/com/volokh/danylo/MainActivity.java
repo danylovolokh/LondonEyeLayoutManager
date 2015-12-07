@@ -103,11 +103,14 @@ public class MainActivity extends ActionBarActivity {
             int screenWidth = getActivity().getResources().getDisplayMetrics().widthPixels;
             int screenHeight = getActivity().getResources().getDisplayMetrics().heightPixels;
 
-            int circleRadius = (int) (screenWidth * 2);
+            int circleRadius = (int) (screenWidth * 1.5);
 
             int xOrigin = -screenWidth;
             int yOrigin = 0;
-
+//            int circleRadius = screenHeight*2 + screenWidth/2;
+//
+//            int xOrigin = -screenHeight*2 + screenWidth/4;
+//            int yOrigin = 0;
             mRecyclerView = (DebugRecyclerView) rootView.findViewById(R.id.recycler_view);
             mRecyclerView.setParameters(circleRadius, xOrigin, yOrigin);
 

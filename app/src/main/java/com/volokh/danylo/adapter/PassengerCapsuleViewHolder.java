@@ -12,9 +12,11 @@ import com.volokh.danylo.q.R;
 public class PassengerCapsuleViewHolder extends RecyclerView.ViewHolder {
 
     public final TextView mCapsuleName;
+    public final View mItemView;
 
     public PassengerCapsuleViewHolder(View itemView) {
         super(itemView);
+        mItemView = itemView;
         mCapsuleName = (TextView)itemView.findViewById(R.id.capsule_name);
     }
 }
