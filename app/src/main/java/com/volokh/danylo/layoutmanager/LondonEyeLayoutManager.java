@@ -1,6 +1,5 @@
 package com.volokh.danylo.layoutmanager;
 
-import android.content.Context;
 import android.graphics.Rect;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -12,15 +11,30 @@ import com.volokh.danylo.layoutmanager.circle_helper.quadrant_helper.QuadrantHel
 import com.volokh.danylo.layoutmanager.circle_helper.quadrant_helper.QuadrantHelperFactory;
 import com.volokh.danylo.layoutmanager.layouter.Layouter;
 import com.volokh.danylo.layoutmanager.layouter.LayouterCallback;
-import com.volokh.danylo.layoutmanager.scroller.PixelPerfectScrollHandler;
 import com.volokh.danylo.layoutmanager.scroller.ScrollHandler;
 import com.volokh.danylo.layoutmanager.scroller.ScrollHandlerCallback;
 
 /**
- * This layout manager is created to layout views on the screen exactly like passenger capsules are situated on the London Eye:
+ * This layout manager is created to layout views on the screen exactly like passenger capsules are situated on the London Eye :)
  *
- *  TODO: add javadoc
+ *                               ______
+ *                              |      |
+ *        *---------------------|View1 |
+ *         \_\____          ____|______|
+ *           \    \__      |      |
+ *            \      \_____|View2 |
+ *             \      _____|______|
+ *              \___ |      |
+ *                  \|View3 |
+ *                   |______|
  *
+ * CAUTION: you cannot layout views on a fully visible circle.
+ * Purpose of RecyclerView and LayoutManager is to recycle views that were scrolled out of the RecyclerView.
+ *
+ * If you situate a center of your circle and set radius to a values that full circle will be visible,
+ * you won't be able to recycle any views because all of them will be always on the screen.
+ *
+ * TODO: validate radius, and xOrigin, yOrigin. Don't let user to set values that makes recycling impossible
  *
  *
  */
@@ -38,12 +52,32 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
     /**
      * This is a helper value. We should always return "true" from {@link #canScrollVertically()} but we need to change this value to false when measuring a child view size.
-     * This is because the width "match_parent" is not calculated correctly if {@link #canScrollHorizontally()} returns "true"
+     * This is because the height "match_parent" is not calculated correctly if {@link #canScrollHorizontally()} returns "true"
      * and
      * the height "match_parent" is not calculated correctly if {@link #canScrollVertically()} returns "true"
      */
 
-    private boolean mCanScrollVerticallyHorizontally = true;
+    private boolean mCanScrollVertically = true;
+
+    private final int mRadius;
+
+    private int mFirstVisiblePosition = 0; //TODO: implement save/restore state
+    private int mLastVisiblePosition = 0; //TODO: implement save/restore state
+
+    public LondonEyeLayoutManager(int radius, int xOrigin, int yOrigin, RecyclerView recyclerView, ScrollHandler.Strategy scrollStrategy) {
+        mRadius = radius;
+
+        mRecyclerView = recyclerView;
+
+        mQuadrantHelper = QuadrantHelperFactory.createQuadrantHelper(radius, xOrigin, yOrigin);
+
+        mLayouter = new Layouter(this, mQuadrantHelper);
+        mScroller = ScrollHandler.Factory.createScrollHandler(
+                scrollStrategy,
+                this,
+                mQuadrantHelper,
+                mLayouter);
+    }
 
     @Override
     public void getHitRect(Rect rect) {
@@ -84,22 +118,6 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
         return widthHeight;
     }
 
-    private final int mRadius;
-
-    private int mFirstVisiblePosition = 0; //TODO: restore state
-    private int mLastVisiblePosition = 0; //TODO: restore state
-
-    public LondonEyeLayoutManager(Context context, int radius, int xOrigin, int yOrigin, RecyclerView recyclerView) {
-        mRadius = radius;
-
-        mRecyclerView = recyclerView;
-
-        mQuadrantHelper = QuadrantHelperFactory.createQuadrantHelper(radius, xOrigin, yOrigin);
-
-        mLayouter = new Layouter(this, mRadius, mQuadrantHelper);
-        mScroller = new PixelPerfectScrollHandler(this, mRadius, mQuadrantHelper, mLayouter); // TODO: use strategy for this
-    }
-
     @Override
     public RecyclerView.LayoutParams generateDefaultLayoutParams() {
         return new RecyclerView.LayoutParams(
@@ -109,12 +127,12 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
     @Override
     public boolean canScrollVertically() {
-        return mCanScrollVerticallyHorizontally;
+        return mCanScrollVertically;
     }
 
     @Override
     public boolean canScrollHorizontally() {
-        return false;// TODO: return false ony for now .mCanScrollVerticallyHorizontally;
+        return false;
     }
 
     @Override
@@ -124,17 +142,11 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
         if(SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy childCount " + childCount);
 
         if (childCount == 0) {
+            // we cannot scroll if we don't have views
             return 0;
         }
 
         return mScroller.scrollVerticallyBy(dy, recycler);
-    }
-
-    @Override
-    public int scrollHorizontallyBy(int dx, RecyclerView.Recycler recycler, RecyclerView.State state) {
-        if(SHOW_LOGS) Log.v(TAG, "scrollHorizontallyBy dx " + dx);
-
-        return super.scrollHorizontallyBy(dx, recycler, state);
     }
 
     @Override
@@ -150,6 +162,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
         removeAllViews();
 
+        // TODO: These values should not be set to "0". They should be restored from state
         mLastVisiblePosition = 0;
         mFirstVisiblePosition = 0;
 
@@ -174,7 +187,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
             // We update coordinates instead of creating new object to keep the heap clean
             if (SHOW_LOGS) Log.v(TAG, "onLayoutChildren, viewData " + viewData);
 
-            isLastLayoutedView = mLayouter.isLastLayoutedView(view);
+            isLastLayoutedView = mLayouter.isLastLaidOutView(view);
             mLastVisiblePosition++;
 
         } while (!isLastLayoutedView && mLastVisiblePosition < itemCount);
@@ -193,12 +206,12 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
      */
     public void measureChildWithMargins(View child, int widthUsed, int heightUsed) {
         // change a value to "false "temporary while measuring
-        mCanScrollVerticallyHorizontally = false;
+        mCanScrollVertically = false;
 
         super.measureChildWithMargins(child, widthUsed, heightUsed);
 
         // return a value to "true" because we do actually can scroll in both ways
-        mCanScrollVerticallyHorizontally = true;
+        mCanScrollVertically = true;
     }
 
     @Override

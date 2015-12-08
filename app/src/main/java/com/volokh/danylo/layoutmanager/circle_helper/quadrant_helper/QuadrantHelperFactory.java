@@ -19,6 +19,10 @@ public class QuadrantHelperFactory {
     private final static int THIRD_QUADRANT = 3;
     private final static int FOURTH_QUADRANT = 4;
 
+    /**
+     * This method should calculate in which quadrant of a circle should we layout views.
+     * There is four quadrant
+     */
     public static QuadrantHelper createQuadrantHelper(int radius, int xOrigin, int yOrigin) {
         int quadrant = QuadrantCalculator.getQuadrant(radius, xOrigin, yOrigin);
 

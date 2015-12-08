@@ -1,21 +1,15 @@
 package com.volokh.danylo;
 
-import android.graphics.Canvas;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.ListView;
-import android.widget.TextView;
 
 import com.volokh.danylo.adapter.LondonEyeListAdapter;
 import com.volokh.danylo.layoutmanager.LondonEyeLayoutManager;
+import com.volokh.danylo.layoutmanager.scroller.ScrollHandler;
 import com.volokh.danylo.q.R;
 
 import java.util.ArrayList;
@@ -119,7 +113,13 @@ public class MainActivity extends ActionBarActivity {
 //            // in content do not change the layout size of the RecyclerView
             mRecyclerView.setHasFixedSize(true);
 
-            mLondonEyeLayoutManager = new LondonEyeLayoutManager(getActivity(), circleRadius, xOrigin, yOrigin, mRecyclerView);
+            mLondonEyeLayoutManager = new LondonEyeLayoutManager(
+                    circleRadius,
+                    xOrigin,
+                    yOrigin,
+                    mRecyclerView,
+                    ScrollHandler.Strategy.PIXEL_PERFECT);
+
             mRecyclerView.setLayoutManager(mLondonEyeLayoutManager);//new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
 
             mVideoRecyclerViewAdapter = new LondonEyeListAdapter(getActivity(), mList);

@@ -11,7 +11,8 @@ import com.volokh.danylo.layoutmanager.ViewData;
 
 /**
  * Created by danylo.volokh on 11/17/2015.
- * This is a helper that performs layouting and knows everything about how to layout views
+ * This is a helper that performs layout and knows everything about how to layout views.
+ *
  */
 public class Layouter {
 
@@ -22,11 +23,8 @@ public class Layouter {
 
     private final QuadrantHelper mQuadrantHelper;
 
-    private final int mRadius;
-
-    public Layouter(LayouterCallback callback, int radius, QuadrantHelper quadrantHelper){
+    public Layouter(LayouterCallback callback, QuadrantHelper quadrantHelper){
         mCallback = callback;
-        mRadius = radius;
         mQuadrantHelper = quadrantHelper;
     }
 
@@ -99,6 +97,7 @@ public class Layouter {
         if (SHOW_LOGS) Log.v(TAG, "<< layoutViewPreviousView");
         return previousViewData;
     }
+
     private void performLayout(View view, Point viewCenter, int halfViewWidth, int halfViewHeight) {
         if (SHOW_LOGS) Log.i(TAG, "performLayout, final viewCenter " + viewCenter);
 
@@ -117,7 +116,7 @@ public class Layouter {
      * This method checks if this is last visible layouted view.
      * The return might be used to know if we should stop laying out
      */
-    public boolean isLastLayoutedView(View view) {
+    public boolean isLastLaidOutView(View view) {
         int recyclerHeight = mCallback.getHeight();
         return mQuadrantHelper.isLastLayoutedView(recyclerHeight, view);
     }

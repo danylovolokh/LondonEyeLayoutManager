@@ -10,7 +10,7 @@ import com.volokh.danylo.layoutmanager.circle_helper.point.Point;
  *
  * This is generic interface for quadrant related functionality.
  *
- * For layouting in each quadrant you should implement quadrant-specific classes :
+ * To layout in each quadrant you should implement quadrant-specific classes :
  * {@link FirstQuadrantHelper}
  */
 public interface QuadrantHelper {
@@ -25,4 +25,9 @@ public interface QuadrantHelper {
     Point findPreviousViewCenter(ViewData nextViewData, int previousViewHalfViewHeight);
 
     boolean isLastLayoutedView(int recyclerHeight, View view);
+
+    int checkBoundsReached(int recyclerViewHeight, int dy, View firstView, View lastView, boolean isFirstItemReached, boolean isLastItemReached);
+
+    int getOffset(int recyclerViewHeight, View lastView);
+
 }

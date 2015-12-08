@@ -13,7 +13,19 @@ import com.volokh.danylo.layoutmanager.layouter.Layouter;
 
 /**
  * Created by danylo.volokh on 28.11.2015.
- * TODO: specify 1st quadrant specific stuff
+ * This scroll handler keeps view in touch when scrolling.
+ *  1. Views center is on the circle
+ *  2. Views edges are always in touch with each other.
+ *
+ * Sometimes these requirements are making views "jump" when scroll:
+ * If "view B" is below "view A" and views are scrolled down we can reach a point
+ * in which "view B" cannot longer stay below "view A" and keep it's center on the circle so,
+ * in this case "view B" jumps to the side in order to stay in touch with "view A" side by side and keep it's center on the circle.
+ *
+ *
+ * The logic:
+ * 1. Scroll first view by received offset.
+ * 2. Calculate position of other views related to first view.
  */
 public class PixelPerfectScrollHandler implements ScrollHandler {
 
@@ -22,7 +34,6 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
 
     private final ScrollHandlerCallback mCallback;
     private final QuadrantHelper mQuadrantHelper;
-    private final int mRadius;
     private final Layouter mLayouter;
 
     /**
@@ -31,13 +42,15 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
      */
     private final static UpdatablePoint SCROLL_HELPER_POINT = new UpdatablePoint(0, 0);
 
-    public PixelPerfectScrollHandler(ScrollHandlerCallback callback, int radius, QuadrantHelper quadrantHelper, Layouter layouter) {
+    PixelPerfectScrollHandler(ScrollHandlerCallback callback, QuadrantHelper quadrantHelper, Layouter layouter) {
         mCallback = callback;
-        mRadius = radius;
         mQuadrantHelper = quadrantHelper;
         mLayouter = layouter;
     }
 
+    /**
+     * This method calculates new position of first view and returns new center point of first view
+     */
     private Point scrollFirstViewVerticallyBy(View view, int indexOffset) {
         if (SHOW_LOGS) Log.v(TAG, ">> scrollFirstViewVerticallyBy, indexOffset " + indexOffset);
 
@@ -62,6 +75,13 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
     }
 
 
+    /**
+     * This method does:
+     * 1. Shifts all views by received offset "dy".
+     *      1a. Shifts first view by "dy"
+     *      1b. Shifts all other views relatively to first view.
+     * 2. Perform recycling if needed
+     */
     @Override
     public int scrollVerticallyBy(int dy, RecyclerView.Recycler recycler) {
         if (SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy, dy " + dy);
@@ -73,13 +93,10 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
                 mCallback.getChildCount() - 1
         );
 
-        int delta = checkBoundsReached(dy, firstView, lastView, isFirstItemReached, isLastItemReached);
-//        if (SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy, delta " + delta);
+        int delta = mQuadrantHelper.checkBoundsReached(mCallback.getHeight(), dy, firstView, lastView, isFirstItemReached, isLastItemReached);
 
-
+        /**1a. */
         Point firstViewNewCenter = scrollFirstViewVerticallyBy(firstView, delta);
-
-//        if (SHOW_LOGS) Log.v(TAG, "scrollVerticallyBy, firstViewNewCenter " + firstViewNewCenter);
 
         ViewData previousViewData = new ViewData(
                 firstView.getTop(),
@@ -87,12 +104,13 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
                 firstView.getLeft(),
                 firstView.getRight(),
                 firstViewNewCenter);
-
+        /**1b. */
         for (int indexOfView = 1; indexOfView < mCallback.getChildCount(); indexOfView++) {
             View view = mCallback.getChildAt(indexOfView);
             scrollSingleView(previousViewData, view);
         }
 
+        /**2. */
         performRecycling(delta, firstView, lastView, recycler);
 
         return -delta;
@@ -124,15 +142,23 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
         previousViewData.updateData(view, newCenterPoint);
     }
 
+    /**
+     * This method recycles views:
+     * If views was scrolled down then it recycles top if needed and add views from the bottom
+     * If views was scrolled up then it recycles bottom if needed and add views from the top
+
+     * @param delta - indicator of scroll direction
+     */
     private void performRecycling(int delta, View firstView, View lastView, RecyclerView.Recycler recycler) {
         if (SHOW_LOGS) Log.v(TAG, ">> performRecycling, delta " + delta);
 
         if (delta < 0) {
-
+            /** Scroll down*/
             recycleTopIfNeeded(firstView, recycler);
             addToBottomIfNeeded(lastView, recycler);
 
         } else {
+            /** Scroll up*/
             recycleBottomIfNeeded(lastView, recycler);
             addTopIfNeeded(firstView, recycler);
         }
@@ -196,16 +222,17 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
                 Math.abs(lastViewRight) > lastView.getWidth() ||
                 Math.abs(lastViewTop) > lastView.getHeight();
 
-        if (SHOW_LOGS) Log.v(TAG, "recycleBottomIfNeeded lastViewIsVisible " + lastViewIsVisible);
-        if (SHOW_LOGS)
+        if (SHOW_LOGS){
+            Log.v(TAG, "recycleBottomIfNeeded lastViewIsVisible " + lastViewIsVisible);
             Log.v(TAG, "recycleBottomIfNeeded isEnoughOverScrollForRecycling " + isEnoughOverScrollForRecycling);
+        }
 
         boolean lastViewShouldBeRecycled = !lastViewIsVisible && isEnoughOverScrollForRecycling;
         if (SHOW_LOGS)
             Log.v(TAG, "recycleBottomIfNeeded lastViewShouldBeRecycled " + lastViewShouldBeRecycled);
 
         if (lastViewShouldBeRecycled) {
-            if (SHOW_LOGS) Log.i(TAG, "recycleTopIfNeeded, recycling bottom view");
+            if (SHOW_LOGS) Log.i(TAG, "recycleBottomIfNeeded, recycling bottom view");
 
             mCallback.removeView(lastView);
             mCallback.decrementLastVisiblePosition();
@@ -215,9 +242,11 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
 
     private void addToBottomIfNeeded(View lastView, RecyclerView.Recycler recycler) {
         // now we should fill extra gap on the bottom if there is one
-        int bottomOffset = getOffset(lastView);
-        if (SHOW_LOGS) Log.v(TAG, "addToBottomIfNeeded, bottomOffset " + bottomOffset);
-        if (SHOW_LOGS) Log.v(TAG, "addToBottomIfNeeded, tag " + lastView.getTag());
+        int bottomOffset = mQuadrantHelper.getOffset(mCallback.getHeight(), lastView);
+        if (SHOW_LOGS){
+            Log.v(TAG, "addToBottomIfNeeded, bottomOffset " + bottomOffset);
+            Log.v(TAG, "addToBottomIfNeeded, tag " + lastView.getTag());
+        }
 
         if (bottomOffset > 0) {
             int itemCount = mCallback.getItemCount();
@@ -272,69 +301,6 @@ public class PixelPerfectScrollHandler implements ScrollHandler {
             mCallback.incrementFirstVisiblePosition();
             recycler.recycleView(firstView);
         }
-    }
-
-    private int checkBoundsReached(int dy, View firstView, View lastView, boolean isFirstItemReached, boolean isLastItemReached) {
-        int delta;
-        if (SHOW_LOGS) Log.v(TAG, "checkBoundsReached, isFirstItemReached " + isFirstItemReached);
-        if (SHOW_LOGS) Log.v(TAG, "checkBoundsReached, isLastItemReached " + isLastItemReached);
-        if (dy > 0) { // Contents are scrolling up
-            //Check against bottom bound
-            if (isLastItemReached) {
-                //If we've reached the last row, enforce limits
-                int bottomOffset = getOffset(lastView);
-                delta = Math.max(-dy, bottomOffset);
-            } else {
-
-                delta = -dy;
-            }
-        } else { // Contents are scrolling down
-            //Check against top bound
-            int topOffset = getTopOffset(firstView);
-            if (SHOW_LOGS) Log.v(TAG, "checkBoundsReached, topOffset " + topOffset);
-            if (SHOW_LOGS) Log.v(TAG, "checkBoundsReached, dy " + dy);
-
-            if (isFirstItemReached) {
-                delta = -Math.max(dy, topOffset); // stoled from FixedGrid
-            } else {
-                delta = -dy;
-            }
-        }
-        if (SHOW_LOGS) Log.v(TAG, "checkBoundsReached, delta " + delta);
-        return delta;
-    }
-
-    private int getTopOffset(View firstView) {
-        return firstView.getTop();
-    }
-
-    private int getOffset(View lastView) {
-//        int offset;
-//
-//        offset = lastView.getLeft();
-//        if (SHOW_LOGS) Log.v(TAG, "getOffset, offset " + offset);
-
-                int offset;
-
-        int recyclerHeight = mCallback.getHeight();
-        if (SHOW_LOGS) Log.v(TAG, "getBottomOffset, recyclerHeight " + recyclerHeight);
-
-        int lastViewLeft = lastView.getLeft();
-        int lastViewBottomOffset = lastView.getBottom() - recyclerHeight;
-        if (lastViewLeft <= 0) {
-            if (lastViewBottomOffset > 0) { // outside of recycler
-                offset = Math.min(lastViewLeft, -lastViewBottomOffset);
-            } else {
-                offset = lastViewLeft;
-            }
-        } else {
-            offset = -lastViewBottomOffset;
-        }
-        if (SHOW_LOGS)
-            Log.v(TAG, "getBottomOffset lastViewLeft " + lastViewLeft + ", lastViewBottomOffset " + lastViewBottomOffset);
-        if (SHOW_LOGS) Log.v(TAG, "getBottomOffset, offset" + offset);
-        return offset;
-
     }
 
     private boolean isLastItemReached() {

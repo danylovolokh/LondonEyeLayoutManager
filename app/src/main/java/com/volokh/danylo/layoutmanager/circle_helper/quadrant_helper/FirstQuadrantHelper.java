@@ -12,9 +12,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * First quadrant isn't really 1st. Mainly views are layouted in 1st quadrant,
- * but part of the last view can be layouted partially in 2nd quadrant.
- * And part of the first view can be layouted partially in 4th quadrant.
+ * First quadrant isn't really 1st. Mainly views are laid out in 1st quadrant,
+ * but the last view can be laid out partially in 2nd quadrant.
+ * And the first view can be laid out partially in 4th quadrant.
  *
  *                  -y |                    \
  *                     |           4th       \
@@ -31,7 +31,7 @@ import java.util.Map;
  *        <--       +y V              <---
  *
  */
-public class FirstQuadrantHelper implements QuadrantHelper { // TODO: implements generic quadrant helper
+public class FirstQuadrantHelper implements QuadrantHelper {
 
     private static final boolean SHOW_LOGS = Config.SHOW_LOGS;
     private static final String TAG = FirstQuadrantHelper.class.getSimpleName();
@@ -351,14 +351,71 @@ next view|    |_        |  |          _|
     @Override
     public boolean isLastLayoutedView(int recyclerHeight, View view) {
         boolean isLastLayoutedView;
-        if(SHOW_LOGS) Log.v(TAG, "isLastLayoutedView, recyclerHeight " + recyclerHeight);
+        if(SHOW_LOGS) Log.v(TAG, "isLastLaidOutView, recyclerHeight " + recyclerHeight);
         int spaceToLeftEdge = view.getLeft();
-        if(SHOW_LOGS) Log.v(TAG, "isLastLayoutedView, spaceToLeftEdge " + spaceToLeftEdge);
+        if(SHOW_LOGS) Log.v(TAG, "isLastLaidOutView, spaceToLeftEdge " + spaceToLeftEdge);
         int spaceToBottomEdge = view.getBottom();
-        if(SHOW_LOGS) Log.v(TAG, "isLastLayoutedView, spaceToBottomEdge " + spaceToBottomEdge);
+        if(SHOW_LOGS) Log.v(TAG, "isLastLaidOutView, spaceToBottomEdge " + spaceToBottomEdge);
         isLastLayoutedView = spaceToLeftEdge <= 0 || spaceToBottomEdge >= recyclerHeight;
-        if(SHOW_LOGS) Log.v(TAG, "isLastLayoutedView, " + isLastLayoutedView);
+        if(SHOW_LOGS) Log.v(TAG, "isLastLaidOutView, " + isLastLayoutedView);
         return isLastLayoutedView;
     }
 
+    @Override
+    public int checkBoundsReached(int recyclerViewHeight, int dy, View firstView, View lastView, boolean isFirstItemReached, boolean isLastItemReached) {
+        int delta;
+        if (SHOW_LOGS) {
+            Log.v(TAG, "checkBoundsReached, isFirstItemReached " + isFirstItemReached);
+            Log.v(TAG, "checkBoundsReached, isLastItemReached " + isLastItemReached);
+        }
+        if (dy > 0) { // Contents are scrolling up
+            //Check against bottom bound
+            if (isLastItemReached) {
+                //If we've reached the last row, enforce limits
+                int bottomOffset = getOffset(recyclerViewHeight, lastView);
+                delta = Math.max(-dy, bottomOffset);
+            } else {
+
+                delta = -dy;
+            }
+        } else { // Contents are scrolling down
+            //Check against top bound
+            int topOffset = firstView.getTop();
+            if (SHOW_LOGS) Log.v(TAG, "checkBoundsReached, topOffset " + topOffset);
+            if (SHOW_LOGS) Log.v(TAG, "checkBoundsReached, dy " + dy);
+
+            if (isFirstItemReached) {
+                delta = -Math.max(dy, topOffset); // stoled from FixedGrid
+            } else {
+                delta = -dy;
+            }
+        }
+        if (SHOW_LOGS) Log.v(TAG, "checkBoundsReached, delta " + delta);
+        return delta;
+    }
+
+    @Override
+    public int getOffset(int recyclerViewHeight, View lastView) {
+
+        int offset;
+
+        if (SHOW_LOGS) Log.v(TAG, "getOffset, recyclerViewHeight " + recyclerViewHeight);
+
+        int lastViewLeft = lastView.getLeft();
+        int lastViewBottomOffset = lastView.getBottom() - recyclerViewHeight;
+        if (lastViewLeft <= 0) {
+            if (lastViewBottomOffset > 0) { // outside of recycler
+                offset = Math.min(lastViewLeft, -lastViewBottomOffset);
+            } else {
+                offset = lastViewLeft;
+            }
+        } else {
+            offset = -lastViewBottomOffset;
+        }
+        if (SHOW_LOGS) {
+            Log.v(TAG, "getOffset lastViewLeft " + lastViewLeft + ", lastViewBottomOffset " + lastViewBottomOffset);
+            Log.v(TAG, "getOffset, offset" + offset);
+        }
+        return offset;
+    }
 }
