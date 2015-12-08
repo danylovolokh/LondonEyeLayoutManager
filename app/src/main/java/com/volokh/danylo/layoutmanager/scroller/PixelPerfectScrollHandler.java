@@ -49,13 +49,13 @@ public class PixelPerfectScrollHandler extends ScrollHandler {
     }
 
     /**
-     * 1a. Shifts first view by "dy"
-     * 1b. Shifts all other views relatively to first view.
+     * 1. Shifts first view by "dy"
+     * 2. Shifts all other views relatively to first view.
      */
     @Override
     protected void scrollViews(View firstView, int delta) {
-        /**1a. */
-        Point firstViewNewCenter = scrollFirstViewVerticallyBy(firstView, delta);
+        /**1. */
+        Point firstViewNewCenter = scrollSingleViewVerticallyBy(firstView, delta);
 
         ViewData previousViewData = new ViewData(
                 firstView.getTop(),
@@ -63,37 +63,12 @@ public class PixelPerfectScrollHandler extends ScrollHandler {
                 firstView.getLeft(),
                 firstView.getRight(),
                 firstViewNewCenter);
-        /**1b. */
+
+        /**2. */
         for (int indexOfView = 1; indexOfView < mCallback.getChildCount(); indexOfView++) {
             View view = mCallback.getChildAt(indexOfView);
             scrollSingleView(previousViewData, view);
         }
-    }
-
-    /**
-     * This method calculates new position of first view and returns new center point of first view
-     */
-    private Point scrollFirstViewVerticallyBy(View view, int indexOffset) {
-        if (SHOW_LOGS) Log.v(TAG, ">> scrollFirstViewVerticallyBy, indexOffset " + indexOffset);
-
-        int viewCenterX = view.getRight() - view.getWidth() / 2;
-        int viewCenterY = view.getTop() + view.getHeight() / 2;
-        SCROLL_HELPER_POINT.update(viewCenterX, viewCenterY);
-
-        int centerPointIndex = mQuadrantHelper.getViewCenterPointIndex(SCROLL_HELPER_POINT);
-
-        int newCenterPointIndex = mQuadrantHelper.getNewCenterPointIndex(centerPointIndex + indexOffset);
-
-        Point newCenterPoint = mQuadrantHelper.getViewCenterPoint(newCenterPointIndex);
-        if (SHOW_LOGS) Log.v(TAG, "scrollFirstViewVerticallyBy, viewCenterY " + viewCenterY);
-
-        int dx = newCenterPoint.getX() - viewCenterX;
-        int dy = newCenterPoint.getY() - viewCenterY;
-
-        view.offsetTopAndBottom(dy);
-        view.offsetLeftAndRight(dx);
-
-        return newCenterPoint;
     }
 
     private void scrollSingleView(ViewData previousViewData, View view) {

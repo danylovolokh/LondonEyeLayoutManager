@@ -6,6 +6,7 @@ import android.view.View;
 
 import com.volokh.danylo.Config;
 import com.volokh.danylo.layoutmanager.ViewData;
+import com.volokh.danylo.layoutmanager.circle_helper.point.Point;
 import com.volokh.danylo.layoutmanager.circle_helper.point.UpdatablePoint;
 import com.volokh.danylo.layoutmanager.circle_helper.quadrant_helper.QuadrantHelper;
 import com.volokh.danylo.layoutmanager.layouter.Layouter;
@@ -63,6 +64,32 @@ public abstract class ScrollHandler implements IScrollHandler{
         performRecycling(delta, firstView, lastView, recycler);
 
         return -delta;
+    }
+
+    /**
+     * This method calculates new position of single view and returns new center point of first view
+     */
+    protected Point scrollSingleViewVerticallyBy(View view, int indexOffset) {
+        if (SHOW_LOGS) Log.v(TAG, ">> scrollSingleViewVerticallyBy, indexOffset " + indexOffset);
+
+        int viewCenterX = view.getRight() - view.getWidth() / 2;
+        int viewCenterY = view.getTop() + view.getHeight() / 2;
+        SCROLL_HELPER_POINT.update(viewCenterX, viewCenterY);
+
+        int centerPointIndex = mQuadrantHelper.getViewCenterPointIndex(SCROLL_HELPER_POINT);
+
+        int newCenterPointIndex = mQuadrantHelper.getNewCenterPointIndex(centerPointIndex + indexOffset);
+
+        Point newCenterPoint = mQuadrantHelper.getViewCenterPoint(newCenterPointIndex);
+        if (SHOW_LOGS) Log.v(TAG, "scrollSingleViewVerticallyBy, viewCenterY " + viewCenterY);
+
+        int dx = newCenterPoint.getX() - viewCenterX;
+        int dy = newCenterPoint.getY() - viewCenterY;
+
+        view.offsetTopAndBottom(dy);
+        view.offsetLeftAndRight(dx);
+
+        return newCenterPoint;
     }
 
     /**

@@ -1,6 +1,6 @@
 package com.volokh.danylo.layoutmanager.scroller;
 
-import android.support.v7.widget.RecyclerView;
+import android.view.View;
 
 import com.volokh.danylo.layoutmanager.circle_helper.quadrant_helper.QuadrantHelper;
 import com.volokh.danylo.layoutmanager.layouter.Layouter;
@@ -10,14 +10,20 @@ import com.volokh.danylo.layoutmanager.layouter.Layouter;
  *
  * This scroll handler scrolls every view by the offset that user scrolled with his finger.
  */
-public class NaturalScrollHandler implements IScrollHandler {
+public class NaturalScrollHandler extends ScrollHandler {
+
+    private final ScrollHandlerCallback mCallback;
 
     public NaturalScrollHandler(ScrollHandlerCallback callback, QuadrantHelper quadrantHelper, Layouter layouter) {
-
+        super(callback, quadrantHelper, layouter);
+        mCallback = callback;
     }
 
     @Override
-    public int scrollVerticallyBy(int dy, RecyclerView.Recycler recycler) {
-        return 0;
+    protected void scrollViews(View firstView, int delta) {
+        for (int indexOfView = 0; indexOfView < mCallback.getChildCount(); indexOfView++) {
+            View view = mCallback.getChildAt(indexOfView);
+            scrollSingleViewVerticallyBy(view, delta);
+        }
     }
 }
