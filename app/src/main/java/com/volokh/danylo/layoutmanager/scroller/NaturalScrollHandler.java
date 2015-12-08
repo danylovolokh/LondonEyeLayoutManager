@@ -10,9 +10,10 @@ import com.volokh.danylo.layoutmanager.layouter.Layouter;
  *
  * This scroll handler scrolls every view by the offset that user scrolled with his finger.
  */
-public class NaturalScrollHandler implements ScrollHandler {
+public class NaturalScrollHandler implements IScrollHandler {
 
     public NaturalScrollHandler(ScrollHandlerCallback callback, QuadrantHelper quadrantHelper, Layouter layouter) {
+
     }
 
     @Override

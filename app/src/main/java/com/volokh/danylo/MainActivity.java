@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 
 import com.volokh.danylo.adapter.LondonEyeListAdapter;
 import com.volokh.danylo.layoutmanager.LondonEyeLayoutManager;
-import com.volokh.danylo.layoutmanager.scroller.ScrollHandler;
+import com.volokh.danylo.layoutmanager.scroller.IScrollHandler;
 import com.volokh.danylo.q.R;
 
 import java.util.ArrayList;
@@ -118,7 +118,7 @@ public class MainActivity extends ActionBarActivity {
                     xOrigin,
                     yOrigin,
                     mRecyclerView,
-                    ScrollHandler.Strategy.PIXEL_PERFECT);
+                    IScrollHandler.Strategy.PIXEL_PERFECT);
 
             mRecyclerView.setLayoutManager(mLondonEyeLayoutManager);//new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
 

@@ -11,7 +11,7 @@ import com.volokh.danylo.layoutmanager.circle_helper.quadrant_helper.QuadrantHel
 import com.volokh.danylo.layoutmanager.circle_helper.quadrant_helper.QuadrantHelperFactory;
 import com.volokh.danylo.layoutmanager.layouter.Layouter;
 import com.volokh.danylo.layoutmanager.layouter.LayouterCallback;
-import com.volokh.danylo.layoutmanager.scroller.ScrollHandler;
+import com.volokh.danylo.layoutmanager.scroller.IScrollHandler;
 import com.volokh.danylo.layoutmanager.scroller.ScrollHandlerCallback;
 
 /**
@@ -47,7 +47,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
 
     private final Layouter mLayouter;
 
-    private final ScrollHandler mScroller;
+    private final IScrollHandler mScroller;
     private final QuadrantHelper mQuadrantHelper;
 
     /**
@@ -64,7 +64,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
     private int mFirstVisiblePosition = 0; //TODO: implement save/restore state
     private int mLastVisiblePosition = 0; //TODO: implement save/restore state
 
-    public LondonEyeLayoutManager(int radius, int xOrigin, int yOrigin, RecyclerView recyclerView, ScrollHandler.Strategy scrollStrategy) {
+    public LondonEyeLayoutManager(int radius, int xOrigin, int yOrigin, RecyclerView recyclerView, IScrollHandler.Strategy scrollStrategy) {
         mRadius = radius;
 
         mRecyclerView = recyclerView;
@@ -72,7 +72,7 @@ public class LondonEyeLayoutManager extends RecyclerView.LayoutManager implement
         mQuadrantHelper = QuadrantHelperFactory.createQuadrantHelper(radius, xOrigin, yOrigin);
 
         mLayouter = new Layouter(this, mQuadrantHelper);
-        mScroller = ScrollHandler.Factory.createScrollHandler(
+        mScroller = IScrollHandler.Factory.createScrollHandler(
                 scrollStrategy,
                 this,
                 mQuadrantHelper,
