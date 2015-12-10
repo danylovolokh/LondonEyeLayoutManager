@@ -2,7 +2,7 @@ package com.volokh.danylo.layoutmanager.circle_helper;
 
 import android.util.Log;
 
-import com.volokh.danylo.Config;
+import com.volokh.danylo.utils.Config;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

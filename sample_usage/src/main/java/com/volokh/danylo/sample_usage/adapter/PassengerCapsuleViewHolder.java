@@ -1,10 +1,10 @@
-package com.volokh.danylo.adapter;
+package com.volokh.danylo.sample_usage.adapter;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
 
-import com.volokh.danylo.q.R;
+import com.volokh.danylo.sample_usage.R;
 
 /**
  * Created by danylo.volokh on 10/17/2015.

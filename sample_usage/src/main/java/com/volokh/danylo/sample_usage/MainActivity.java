@@ -1,4 +1,4 @@
-package com.volokh.danylo;
+package com.volokh.danylo.sample_usage;
 
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
@@ -7,10 +7,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.volokh.danylo.adapter.LondonEyeListAdapter;
 import com.volokh.danylo.layoutmanager.LondonEyeLayoutManager;
 import com.volokh.danylo.layoutmanager.scroller.IScrollHandler;
-import com.volokh.danylo.q.R;
+import com.volokh.danylo.sample_usage.adapter.LondonEyeListAdapter;
+import com.volokh.danylo.utils.DebugRecyclerView;
 
 import java.util.ArrayList;
 import java.util.Arrays;

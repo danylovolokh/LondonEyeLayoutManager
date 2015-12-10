@@ -6,7 +6,7 @@
     android:orientation="vertical"
     tools:context=".MainActivity$PlaceholderFragment">
 
-    <com.volokh.danylo.DebugRecyclerView
+    <com.volokh.danylo.utils.DebugRecyclerView
         android:id="@+id/recycler_view"
         android:background="@android:color/holo_orange_dark"
         android:layout_width="match_parent"

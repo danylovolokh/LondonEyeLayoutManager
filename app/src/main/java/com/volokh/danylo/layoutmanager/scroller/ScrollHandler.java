@@ -4,7 +4,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 
-import com.volokh.danylo.Config;
+import com.volokh.danylo.utils.Config;
 import com.volokh.danylo.layoutmanager.ViewData;
 import com.volokh.danylo.layoutmanager.circle_helper.point.Point;
 import com.volokh.danylo.layoutmanager.circle_helper.point.UpdatablePoint;

@@ -1,4 +1,4 @@
-package com.volokh.danylo;
+package com.volokh.danylo.utils;
 
 import android.content.Context;
 import android.graphics.Canvas;

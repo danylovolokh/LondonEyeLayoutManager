@@ -4,7 +4,7 @@ import android.graphics.Rect;
 import android.util.Log;
 import android.view.View;
 
-import com.volokh.danylo.Config;
+import com.volokh.danylo.utils.Config;
 import com.volokh.danylo.layoutmanager.circle_helper.point.Point;
 
 /**

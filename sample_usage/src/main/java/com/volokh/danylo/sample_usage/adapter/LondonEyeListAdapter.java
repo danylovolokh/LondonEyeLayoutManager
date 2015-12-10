@@ -1,4 +1,4 @@
-package com.volokh.danylo.adapter;
+package com.volokh.danylo.sample_usage.adapter;
 
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.RecyclerView;
@@ -7,9 +7,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.volokh.danylo.Config;
-import com.volokh.danylo.layoutmanager.LondonEyeLayoutManager;
-import com.volokh.danylo.q.R;
+import com.volokh.danylo.sample_usage.R;
+import com.volokh.danylo.utils.Config;
 
 import java.util.List;
 

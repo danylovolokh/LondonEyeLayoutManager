@@ -3,7 +3,7 @@ package com.volokh.danylo.layoutmanager.circle_helper.quadrant_helper;
 import android.util.Log;
 import android.view.View;
 
-import com.volokh.danylo.Config;
+import com.volokh.danylo.utils.Config;
 import com.volokh.danylo.layoutmanager.ViewData;
 import com.volokh.danylo.layoutmanager.circle_helper.circle_points_creator.FirstQuadrantCirclePointsCreator;
 import com.volokh.danylo.layoutmanager.circle_helper.point.Point;

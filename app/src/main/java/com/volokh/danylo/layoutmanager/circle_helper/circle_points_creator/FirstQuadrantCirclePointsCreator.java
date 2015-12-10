@@ -2,7 +2,7 @@ package com.volokh.danylo.layoutmanager.circle_helper.circle_points_creator;
 
 import android.util.Log;
 
-import com.volokh.danylo.Config;
+import com.volokh.danylo.utils.Config;
 import com.volokh.danylo.layoutmanager.circle_helper.mirror_helper.CircleMirrorHelper;
 import com.volokh.danylo.layoutmanager.circle_helper.mirror_helper.FirstQuadrantCircleMirrorHelper;
 import com.volokh.danylo.layoutmanager.circle_helper.point.Point;

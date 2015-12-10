@@ -1,4 +1,4 @@
-package com.volokh.danylo;
+package com.volokh.danylo.utils;
 
 /**
  * Created by danylo.volokh on 10/17/2015.
