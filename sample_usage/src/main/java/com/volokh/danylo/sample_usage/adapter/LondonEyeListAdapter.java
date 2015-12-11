@@ -34,7 +34,7 @@ public class LondonEyeListAdapter extends RecyclerView.Adapter<PassengerCapsuleV
 
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.capsule_layout, parent, false);
         ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
-        layoutParams.height = mActivity.getResources().getDisplayMetrics().widthPixels/2;
+        layoutParams.height = mActivity.getResources().getDisplayMetrics().widthPixels/3;
         layoutParams.width = layoutParams.height;
         return new PassengerCapsuleViewHolder(view);
     }

@@ -20,8 +20,9 @@ import java.util.LinkedHashMap;
 public class DebugRecyclerView extends RecyclerView {
 
     private static final String TAG = DebugRecyclerView.class.getSimpleName();
-    private Paint mPaint;
-    private Paint mPaint2;
+
+    private Paint mPaintForCircle;
+    private Paint mPaintForCross;
 
     private int mRadius;
 
@@ -66,25 +67,22 @@ public class DebugRecyclerView extends RecyclerView {
     }
 
     private void init(){
-        mPaint = new Paint();
-        mPaint.setColor(Color.RED);
-        mPaint.setAlpha(100 /*This is not percents*/);
+        mPaintForCircle = new Paint();
+        mPaintForCircle.setColor(Color.BLACK);
+        mPaintForCircle.setAlpha(100 /*This is not percents*/);
 
-        mPaint2 = new Paint();
-        mPaint2.setColor(Color.BLACK);
-        mPaint2.setStrokeWidth(5);
-
+        mPaintForCross = new Paint();
+        mPaintForCross.setColor(Color.BLACK);
+        mPaintForCross.setStrokeWidth(5);
     }
 
     @Override
-    public void draw(Canvas canvas) {
-        super.draw(canvas);
-
-        canvas.drawCircle(mXOrigin, mYOrigin, mRadius, mPaint);
-        canvas.drawLine(mXOrigin, mYOrigin, 3000, mYOrigin, mPaint2);
-        canvas.drawLine(mXOrigin, mYOrigin, -3000, mYOrigin, mPaint2);
-        canvas.drawLine(mXOrigin, mYOrigin, mXOrigin, 3000, mPaint2);
-        canvas.drawLine(mXOrigin, mYOrigin, mXOrigin, -3000, mPaint2);
-
+    public void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        canvas.drawCircle(mXOrigin, mYOrigin, mRadius, mPaintForCircle);
+        canvas.drawLine(mXOrigin, mYOrigin, 3000, mYOrigin, mPaintForCross);
+        canvas.drawLine(mXOrigin, mYOrigin, -3000, mYOrigin, mPaintForCross);
+        canvas.drawLine(mXOrigin, mYOrigin, mXOrigin, 3000, mPaintForCross);
+        canvas.drawLine(mXOrigin, mYOrigin, mXOrigin, -3000, mPaintForCross);
     }
 }
