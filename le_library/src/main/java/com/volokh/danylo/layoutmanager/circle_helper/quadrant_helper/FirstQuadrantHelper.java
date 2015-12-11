@@ -205,20 +205,27 @@ next view|    |_        |  |          _|
     }
 
     private Point getPreviousViewCenter(Point nextViewCenter) {
+        if (SHOW_LOGS) Log.v(TAG, ">> getPreviousViewCenter");
+
         /** 1. */
         int nextViewCenterPointIndex = mCirclePointIndex.get(nextViewCenter);
+        if (SHOW_LOGS) Log.v(TAG, "getPreviousViewCenter, nextViewCenterPointIndex " + nextViewCenterPointIndex);
 
         /** 2. */
         int newIndex = nextViewCenterPointIndex - 1;
+        if (SHOW_LOGS) Log.v(TAG, "getPreviousViewCenter, newIndex " + newIndex);
 
         int lastIndex = mCircleIndexPoint.size() - 1;
+        if (SHOW_LOGS) Log.v(TAG, "getPreviousViewCenter, lastIndex " + lastIndex);
 
         /** 3. */
         int previousViewCenterPointIndex = newIndex < 0 ?
                 lastIndex + newIndex: // this will subtract newIndex from last index
                 newIndex;
+        if (SHOW_LOGS) Log.v(TAG, "getPreviousViewCenter, previousViewCenterPointIndex " + previousViewCenterPointIndex);
 
         /** 4. */
+        if (SHOW_LOGS) Log.v(TAG, "<< getPreviousViewCenter");
         return mCircleIndexPoint.get(previousViewCenterPointIndex);
     }
 
@@ -326,10 +333,13 @@ next view|    |_        |  |          _|
         boolean foundNextViewCenter;
         do {
             /** 1.*/
+            if (SHOW_LOGS) Log.v(TAG, "findPreviousViewCenter, nextViewCenter " + nextViewCenter);
             previousViewCenter = getPreviousViewCenter(nextViewCenter);
+            if (SHOW_LOGS) Log.v(TAG, "findPreviousViewCenter, previousViewCenter " + previousViewCenter);
 
             /** 2. */
             int previousViewBottom = previousViewCenter.getY() + previousViewHalfViewHeight;
+            if (SHOW_LOGS) Log.v(TAG, "findPreviousViewCenter, previousViewBottom " + previousViewBottom);
 
             boolean previousViewBottomIsAboveNextViewTop = previousViewBottom < nextViewData.getViewTop();
 
