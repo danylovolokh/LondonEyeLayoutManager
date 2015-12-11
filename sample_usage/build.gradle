@@ -5,7 +5,7 @@ android {
     buildToolsVersion "21.1.2"
 
     dependencies {
-        compile project(':app')
+        compile project(':le_library')
     }
 
     defaultConfig {
