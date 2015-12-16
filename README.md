@@ -1,6 +1,7 @@
 # LondonEyeLayoutManager
 
 [![Android_weekly](https://img.shields.io/badge/Android%20Weekly-LondonEyeLayoutManager-green.svg)](http://androidweekly.net/issues/issue-183)
+[![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-LondonEyeLayoutManager-green.svg?style=true)](https://android-arsenal.com/details/1/2917)
 
 A LayoutManager that must be used with RecyclerView. 
 When list is scrolled views are moved by circular trajectory
