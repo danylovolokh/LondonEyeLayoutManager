@@ -49,6 +49,10 @@ List<String> mList = new ArrayList<>(Arrays.asList(
   mRecyclerView.setAdapter(mVideoRecyclerViewAdapter);
 ```
 
+#Details of implementation
+[10 steps to create a custom LayoutManager](https://medium.com/@v.danylo/10-steps-to-create-a-custom-layoutmanager-2f30ab2f979d "10 steps to create a custom LayoutManager")
+
+
 # Demo of Natural Scroll handler.
 
 This scroll handler keeps the distance between cabins as a constant. This means that if your views are next to each other they will overlap each other when you scroll.
