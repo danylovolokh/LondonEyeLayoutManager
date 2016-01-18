@@ -1,1 +1,1 @@
-include ':le_library', ':sample_usage'
+include ':london-eye-layout-manager', ':sample_usage'
