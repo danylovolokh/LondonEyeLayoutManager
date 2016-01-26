@@ -50,8 +50,8 @@ List<String> mList = new ArrayList<>(Arrays.asList(
 ```
 
 #Details of implementation
-[10 steps to create a custom LayoutManager](https://medium.com/@v.danylo/10-steps-to-create-a-custom-layoutmanager-2f30ab2f979d "10 steps to create a custom LayoutManager")
 
+[![Medium](https://img.shields.io/badge/Meduim-10%20steps%20to%20create%20a%20custom%20LayoutManager-blue.svg)](https://medium.com/@v.danylo/10-steps-to-create-a-custom-layoutmanager-2f30ab2f979d)
 
 # Demo of Natural Scroll handler.
 
